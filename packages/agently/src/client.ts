@@ -48,12 +48,12 @@ export function createBridgeClient(
         timer
       });
 
-      transport.send(msg);
+      transport!.send(msg);
     });
   }
 
   function notify(type: string, payload?: unknown): void {
-    transport.send(createMessage(type, payload));
+    transport!.send(createMessage(type, payload));
   }
 
   function dispose(): void {

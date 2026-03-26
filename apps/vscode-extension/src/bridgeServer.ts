@@ -15,6 +15,17 @@ export class BridgeServer extends EventEmitter {
     this.#server = createServer(async (req, res) => {
       const { method = "GET", url = "/" } = req;
 
+      // Handle CORS
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+      if (method === "OPTIONS") {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
       if (method === "POST" && url === "/agently/prompt") {
         try {
           const payload = await parsePromptPayload(req);

@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run VS Code Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/apps/vscode-extension"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/apps/vscode-extension/dist/**/*.js"
+      ],
+      "preLaunchTask": "Build VS Code Extension"
+    },
+    {
+      "name": "Launch Demo App (Browser)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/apps/demo-react-app",
+      "preLaunchTask": "Run Demo App"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Agently: Full Environment",
+      "configurations": [
+        "Run VS Code Extension",
+        "Launch Demo App (Browser)"
+      ]
+    }
+  ]
+}

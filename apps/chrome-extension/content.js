@@ -1,4 +1,5 @@
 (() => {
+  console.log("Agently loaded.");
   const BRIDGE_URL = "http://127.0.0.1:43110/agently/prompt";
   const OVERLAY_ID = "agently-overlay";
   const PANEL_ID = "agently-panel";
@@ -7,7 +8,7 @@
   let selectedElement = null;
 
   document.addEventListener(
-    "contextmenu",
+    "mousedown",
     (event) => {
       if (!event.shiftKey) return;
 
@@ -46,7 +47,7 @@
       color: #f9fafb;
       box-shadow: 0 12px 36px rgba(0,0,0,.35);
       z-index: 2147483647;
-      padding: 10px;
+      padding: 20px;
       font-family: Inter, system-ui, sans-serif;
     `;
 

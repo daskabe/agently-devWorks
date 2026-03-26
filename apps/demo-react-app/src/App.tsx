@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createBridgeClient, VscodeTransport, WindowTransport } from "@agently/bridge";
 
 type Card = {
@@ -73,6 +73,26 @@ export default function App() {
     []
   );
 
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!e.shiftKey) return;
+
+      const cardElement = (e.target as HTMLElement).closest("[data-card]");
+      if (!cardElement) return;
+
+      e.preventDefault();
+
+      const cardId = cardElement.getAttribute("data-card");
+      const card = cards.find((c) => c.id === cardId);
+      if (card) {
+        sendPrompt(card);
+      }
+    };
+
+    window.addEventListener("mousedown", handleMouseDown, true);
+    return () => window.removeEventListener("mousedown", handleMouseDown, true);
+  }, [client]);
+
   const sendPrompt = (card: Card) => {
     const text = `Improve the ${card.title} section with better hierarchy.`;
 
@@ -93,7 +113,7 @@ export default function App() {
     <main className="page">
       <header className="header">
         <h1>Agently Demo Dashboard</h1>
-        <p>Shift + right-click any card in your local app, or use quick prompts below.</p>
+        <p>Shift + left-click any card in your local app, or use quick prompts below.</p>
         <div className="status">Bridge status: {status}</div>
       </header>
 

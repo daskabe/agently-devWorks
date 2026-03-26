@@ -38,9 +38,9 @@ A local bridge server + prompt queue panel inside VS Code.
 
 ### `chrome-extension`
 
-A Manifest V3 content-script extension that enables **Shift + right-click** prompting on local pages.
+A Manifest V3 content-script extension that enables **Shift + left-click** prompting on local pages.
 
-- Intercepts `Shift + right-click`
+- Intercepts `Shift + left-click`
 - Shows an inline prompt panel at cursor location
 - Collects clicked element context (`selector`, `htmlSnippet`, `pageUrl`)
 - Sends payload to local VS Code bridge endpoint
@@ -58,7 +58,7 @@ A simple React dashboard with card components inspired by your reference layout 
 1. Start VS Code extension host and run command **Agently: Open Prompt Panel**.
 2. Load unpacked extension from `apps/chrome-extension` in Chrome.
 3. Run the demo app (`pnpm --filter demo-react-app dev`) and open its local URL.
-4. Hold **Shift**, right-click an element, enter prompt, click **Send**.
+4. Hold **Shift**, left-click an element, enter prompt, click **Send**.
 5. In VS Code run **Agently: Apply Next Queued Prompt**.
 
 ## Bridge payload shape

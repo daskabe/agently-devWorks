@@ -68,14 +68,14 @@ function getHtml(): string {
 
         if (message.type === 'queue.update') {
           const items = message.payload || [];
-          list.innerHTML = items.map((item) => `
+          list.innerHTML = items.map((item) => \`
             <div class="card">
-              <div><strong>${escape(item.text)}</strong></div>
-              <div class="meta">source: ${escape(item.source || 'unknown')}</div>
-              <div class="meta">selector: <code>${escape(item.context?.selector || '-')}</code></div>
-              <div class="meta">url: ${escape(item.context?.pageUrl || '-')}</div>
+              <div><strong>\${escape(item.text)}</strong></div>
+              <div class="meta">source: \${escape(item.source || 'unknown')}</div>
+              <div class="meta">selector: <code>\${escape(item.context?.selector || '-')}</code></div>
+              <div class="meta">url: \${escape(item.context?.pageUrl || '-')}</div>
             </div>
-          `).join('');
+          \`).join('');
         }
       });
 
