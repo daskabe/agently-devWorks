@@ -27,29 +27,6 @@ const client = createBridgeClient([
 client.notify("prompt.send", { text: "change the background to blue" });
 ```
 
-### `agently-vscode-extension`
-
-A local bridge server + prompt queue panel inside VS Code.
-
-- Starts an HTTP server on `127.0.0.1:<agently.bridgePort>` (default `43110`)
-- Accepts `POST /agently/prompt` payloads from browser integrations
-- Queues prompts in an Agently panel
-- Applies the next queued prompt to the active editor via command
-
-Example payload:
-
-```json
-{
-  "text": "change the background to blue",
-  "source": "chrome-extension",
-  "context": {
-    "selector": "#hero",
-    "pageUrl": "http://localhost:3000/",
-    "htmlSnippet": "<section id=\"hero\">..."
-  }
-}
-```
-
 ## Current protocol contract
 
 - `channel`: always `"agently"`
