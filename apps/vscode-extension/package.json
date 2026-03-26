@@ -1,0 +1,76 @@
+{
+  "name": "agently-vscode-extension",
+  "displayName": "Agently",
+  "description": "Developer productivity bridge for prompt-driven code edits.",
+  "version": "0.1.0",
+  "publisher": "agently",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:agently.openPromptPanel",
+    "onCommand:agently.applyQueuedPrompt",
+    "onCommand:agently.processQueue"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agently.openPromptPanel",
+        "title": "Agently: Open Prompt Panel"
+      },
+      {
+        "command": "agently.applyQueuedPrompt",
+        "title": "Agently: Apply Next Queued Prompt"
+      },
+      {
+        "command": "agently.processQueue",
+        "title": "Agently: Process Queue with Antigravity"
+      }
+    ],
+    "configuration": {
+      "title": "Agently",
+      "properties": {
+        "agently.bridgePort": {
+          "type": "number",
+          "default": 43110,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "Local HTTP port used by browser integrations to send prompt payloads."
+        },
+        "agently.autoOpenPanelOnPrompt": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open/focus the Agently panel when a prompt arrives from the local bridge."
+        },
+        "agently.autoProcessQueue": {
+          "type": "boolean",
+          "default": false,
+          "description": "Immediately try to process incoming prompts using the configured Antigravity command."
+        },
+        "agently.processorCommand": {
+          "type": "string",
+          "default": "antigravity.prompt.send",
+          "description": "VS Code command ID used to process prompts with Antigravity."
+        },
+        "agently.fallbackInsertComment": {
+          "type": "boolean",
+          "default": true,
+          "description": "If command processing fails, insert a comment block in the active editor instead."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/vscode": "^1.95.0"
+  }
+}
