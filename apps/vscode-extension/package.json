@@ -1,0 +1,56 @@
+{
+  "name": "agently-vscode-extension",
+  "displayName": "Agently",
+  "description": "Developer productivity bridge for prompt-driven code edits.",
+  "version": "0.1.0",
+  "publisher": "agently",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:agently.openPromptPanel",
+    "onCommand:agently.applyQueuedPrompt"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agently.openPromptPanel",
+        "title": "Agently: Open Prompt Panel"
+      },
+      {
+        "command": "agently.applyQueuedPrompt",
+        "title": "Agently: Apply Next Queued Prompt"
+      }
+    ],
+    "configuration": {
+      "title": "Agently",
+      "properties": {
+        "agently.bridgePort": {
+          "type": "number",
+          "default": 43110,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "Local HTTP port used by browser integrations to send prompt payloads."
+        },
+        "agently.autoOpenPanelOnPrompt": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open/focus the Agently panel when a prompt arrives from the local bridge."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/vscode": "^1.95.0"
+  }
+}
