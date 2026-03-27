@@ -13,6 +13,7 @@
     "mousedown",
     (event) => {
       if (!event.shiftKey) return;
+      if (event.button !== 0) return;
 
       event.preventDefault();
       event.stopPropagation();
@@ -55,7 +56,10 @@
 
     panel.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-        <div style="font-size:12px; opacity:.85;">Agently prompt</div>
+        <div style="font-size:16px; opacity:.85; color:orange;">Agently
+        <br/>
+        <span style="font-size:10px; opacity:.6;">prompt away...</span>
+        </div>
         <button id="agently-mic" title="Voice input" aria-label="Voice input"
           style="width:28px; height:28px; border-radius:8px; border:1px solid #374151; background:transparent; color:inherit; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">

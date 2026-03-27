@@ -75,7 +75,7 @@ export default function App() {
 
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
-      if (!e.shiftKey) return;
+      if (!e.shiftKey || e.button !== 0) return;
 
       const cardElement = (e.target as HTMLElement).closest("[data-card]");
       if (!cardElement) return;
