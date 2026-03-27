@@ -11,11 +11,19 @@ export class AgentlyPanel {
 
   show() {
     if (!this.#panel) {
+      const localResourceRoots = [
+        this.#extensionUri,
+        ...(vscode.workspace.workspaceFolders ?? []).map((folder) => folder.uri)
+      ];
+
       this.#panel = vscode.window.createWebviewPanel(
         "agentlyPromptPanel",
         "Agently Prompt Queue",
         vscode.ViewColumn.Beside,
-        { enableScripts: true }
+        {
+          enableScripts: true,
+          localResourceRoots
+        }
       );
 
       this.#panel.onDidDispose(() => {
@@ -45,14 +53,37 @@ function getHtml(): string {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Agently</title>
     <style>
-      body { font-family: sans-serif; padding: 12px; }
+      body {
+        font-family: var(--vscode-font-family);
+        padding: 12px;
+        color: var(--vscode-foreground);
+        background: var(--vscode-editor-background);
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .header h2 {
+        margin: 0;
+        font-size: 18px;
+      }
       .meta { opacity: 0.75; font-size: 12px; }
-      .card { border: 1px solid #3333; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+      .card {
+        border: 1px solid var(--vscode-panel-border);
+        border-radius: 8px;
+        padding: 8px;
+        margin-bottom: 8px;
+        background: color-mix(in srgb, var(--vscode-editor-background) 88%, var(--vscode-foreground) 12%);
+      }
       code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     </style>
   </head>
   <body>
-    <h2>Agently Prompt Queue</h2>
+    <div class="header">
+      <h2>Agently Prompt Queue</h2>
+    </div>
     <div id="status" class="meta">Waiting for prompts…</div>
     <div id="list"></div>
     <script>

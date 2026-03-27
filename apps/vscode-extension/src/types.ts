@@ -7,7 +7,7 @@ export interface PromptContext {
 export interface PromptRequestPayload {
   text: string;
   context?: PromptContext;
-  source?: "webapp" | "chrome-extension" | "unknown";
+  source?: string;
   timestamp?: number;
 }
 

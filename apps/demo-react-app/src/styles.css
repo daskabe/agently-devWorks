@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   color: #202531;
-  background: #eceaf1;
+  background: #f2f5f8;
 }
 
 * {
@@ -13,9 +13,54 @@ body {
 }
 
 .page {
-  max-width: 1240px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100vh;
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
   padding: 32px;
+  background: #eef2f7;
+}
+
+.page-content {
+  position: relative;
+  z-index: 1;
+}
+
+.page-shell {
+  position: relative;
+  z-index: 1;
+  background: #fafafa;
+  padding: 30px;
+}
+
+.top-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 8px;
+  border: 1px solid rgba(149, 153, 156, 0.35);
+  border-radius: 14px;
+  background: rgba(198, 201, 205, 0.22);
+  backdrop-filter: blur(8px);
+}
+
+.nav-link {
+  padding: 9px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #25405d;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.nav-link.active {
+  color: #0f2942;
+  background: #e4f3ff;
 }
 
 .header {
@@ -28,13 +73,13 @@ body {
 
 .header p {
   margin: 0;
-  color: #50596a;
+  color: #4f6073;
 }
 
 .status {
   margin-top: 8px;
   font-size: 14px;
-  color: #5d3bb8;
+  color: #2b5f8d;
 }
 
 .grid {
@@ -49,6 +94,11 @@ body {
   border-radius: 18px;
   padding: 18px;
   box-shadow: 0 8px 22px rgba(19, 17, 33, 0.08);
+  cursor: pointer;
+}
+
+.card:hover {
+  box-shadow: 0 14px 28px rgba(70, 58, 148, 0.553);
 }
 
 .icon {
@@ -104,9 +154,154 @@ body {
   font-size: 22px;
 }
 
+.agents-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.agent-column {
+  border: 1px solid rgba(203, 227, 255, 0.38);
+  border-radius: 16px;
+  background: rgba(232, 245, 255, 0.14);
+  padding: 12px;
+  box-shadow: 0 6px 16px #9c9fd8;
+}
+
+.agent-column-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.agent-column-head h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #1f3149;
+}
+
+.agent-name-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.agent-name-button:hover {
+  text-decoration: underline;
+}
+
+.agent-column-head span {
+  font-size: 12px;
+  color: #5f7389;
+}
+
+.agent-tasks {
+  display: grid;
+  gap: 12px;
+}
+
+.task-card h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  color: #1f3149;
+}
+
+.task-item {
+  cursor: default;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(420px, 92vw);
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border-left: 1px solid #d9e8f5;
+  box-shadow: -14px 0 34px rgba(28, 52, 79, 0.16);
+  transform: translateX(105%);
+  transition: transform 260ms ease;
+  z-index: 20;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #cde0ef;
+  border-radius: 10px;
+  background: #f4fbff;
+  color: #48617b;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.drawer-header {
+  padding-right: 44px;
+}
+
+.drawer-header h3 {
+  margin: 4px 0 6px;
+  font-size: 28px;
+  color: #1f3149;
+}
+
+.drawer-header p {
+  margin: 0;
+  color: #59718a;
+}
+
+.drawer-body {
+  margin-top: 18px;
+  flex: 1;
+}
+
+.drawer-description {
+  margin: 0;
+  color: #445b74;
+  line-height: 1.55;
+}
+
+.drawer-section-title {
+  margin: 16px 0 8px;
+  font-size: 16px;
+  color: #213c58;
+}
+
+.drawer-abilities {
+  margin: 0;
+  padding-left: 18px;
+  color: #3e566f;
+}
+
+.drawer-abilities li {
+  margin-bottom: 6px;
+}
+
 @media (max-width: 1040px) {
   .grid {
     grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+
+  .agents-board {
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
   }
 }
 
@@ -117,5 +312,13 @@ body {
 
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .agents-board {
+    grid-template-columns: 1fr;
+  }
+
+  .top-nav {
+    width: 100%;
   }
 }

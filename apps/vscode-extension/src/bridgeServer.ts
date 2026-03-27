@@ -30,6 +30,7 @@ export class BridgeServer extends EventEmitter {
         try {
           const payload = await parsePromptPayload(req);
           this.emit("prompt", payload);
+
           res.writeHead(202, { "content-type": "application/json" });
           res.end(JSON.stringify({ ok: true }));
         } catch {

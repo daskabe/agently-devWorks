@@ -19,6 +19,10 @@ export class PromptQueue {
     return this.#items.shift();
   }
 
+  prepend(item: PromptQueueItem): void {
+    this.#items.unshift(item);
+  }
+
   all(): PromptQueueItem[] {
     return [...this.#items];
   }
