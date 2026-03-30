@@ -5,6 +5,10 @@
   "description": "Shift+left-click any element, send an LLM prompt + DOM context to local VS Code bridge.",
   "permissions": ["storage"],
   "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "settings.html",
   "content_scripts": [
     {
       "matches": [
@@ -13,11 +17,36 @@
         "http://127.0.0.1/*",
         "http://127.0.0.1:*/*"
       ],
+      "css": ["content.css"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/fonts/*", "icons/settings.svg"],
+      "matches": [
+        "http://localhost/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*"
+      ]
+    }
+  ],
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
   "action": {
-    "default_title": "Agently"
+    "default_title": "Agently",
+    "default_icon": {
+      "48": "icons/icon-48.png"
+    },
+    "theme_icons": [
+      {
+        "light": "icons/icon-48.png",
+        "dark": "icons/icon-48.png",
+        "size": 48
+      }
+    ]
   }
 }

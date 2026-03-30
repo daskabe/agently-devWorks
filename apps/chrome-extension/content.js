@@ -1,234 +1,858 @@
 (() => {
-  console.log("Agently loaded.");
   const BRIDGE_URL = "http://127.0.0.1:43110/agently/prompt";
   const OVERLAY_ID = "agently-overlay";
   const PANEL_ID = "agently-panel";
+  const PANEL_MARGIN = 8;
+  const DRAWER_ID = "agently-drawer";
+  const DRAWER_RESIZE_ID = "agently-drawer-resize";
+  const BOTTOM_PANEL_ID = "agently-bottom-panel";
+  const BOTTOM_PANEL_RESIZE_ID = "agently-bottom-panel-resize";
+  const BRAND_FONT_STYLE_ID = "agently-brand-font-style";
+  const BRAND_FONT_FILE = "assets/fonts/MoiraiOne-Regular.ttf";
+  const SETTINGS_ICON_FILE = "icons/settings.svg";
 
   let anchor = { x: 16, y: 16 };
   let selectedElement = null;
   let activeRecognition = null;
-  let holdSource = null;
+  let activeMicButton = null;
+  let activeStatusNode = null;
+  let queuedPrompts = [];
+  let queueModeEnabled = false;
+  let editingQueueIndex = null;
+  let drawerWidth = 420;
+  let bottomPanelHeight = 300;
+  let panelMode = "popup";
 
   document.addEventListener(
     "mousedown",
     (event) => {
-      if (!event.shiftKey) return;
-      if (event.button !== 0) return;
+      if (!event.shiftKey || event.button !== 0) {
+        return;
+      }
+
+      const existingPanel = document.getElementById(PANEL_ID) ?? document.getElementById(DRAWER_ID);
+      if (existingPanel?.contains(event.target)) {
+        return;
+      }
 
       event.preventDefault();
       event.stopPropagation();
 
-      selectedElement = event.target instanceof Element ? event.target : null;
       anchor = { x: event.clientX, y: event.clientY };
+      selectedElement = event.target instanceof Element ? event.target : null;
+
+      removePanel();
       showPanel();
     },
     true
   );
 
-  function showPanel() {
-    removePanel();
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key === "Escape" && activeRecognition) {
+        event.preventDefault();
+        event.stopPropagation();
+        stopActiveRecognition();
+        return;
+      }
+
+      if (event.key !== "Escape" || (panelMode !== "drawer" && panelMode !== "bottom")) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      removePanel();
+    },
+    true
+  );
+
+  if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message?.type !== "agently.openBottomPanel") {
+        return;
+      }
+
+      anchor = {
+        x: Math.max(16, Math.floor(window.innerWidth / 2)),
+        y: Math.max(16, window.innerHeight - 16)
+      };
+      selectedElement = null;
+
+      removePanel();
+      showPanel("bottom");
+    });
+  }
+
+  function setRecordingUiActive(isActive) {
+    if (activeMicButton instanceof HTMLElement) {
+      activeMicButton.classList.toggle("is-active", isActive);
+    }
+  }
+
+  function stopActiveRecognition() {
+    if (!activeRecognition) {
+      return false;
+    }
+
+    const recognition = activeRecognition;
+    activeRecognition = null;
+    setRecordingUiActive(false);
+
+    recognition.onresult = null;
+    recognition.onerror = null;
+    recognition.onend = null;
+
+    try {
+      recognition.stop();
+    } catch {
+      try {
+        recognition.abort();
+      } catch {
+        // No-op.
+      }
+    }
+
+    setStatus(activeStatusNode, "Voice input stopped.");
+    return true;
+  }
+
+  function ensureBrandFontLoaded() {
+    if (document.getElementById(BRAND_FONT_STYLE_ID)) {
+      return;
+    }
+
+    const fontUrl = typeof chrome !== "undefined" && chrome.runtime?.getURL
+      ? chrome.runtime.getURL(BRAND_FONT_FILE)
+      : BRAND_FONT_FILE;
+
+    const style = document.createElement("style");
+    style.id = BRAND_FONT_STYLE_ID;
+    style.textContent = `
+      @font-face {
+        font-family: "Moirai One";
+        src: url("${fontUrl}") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+    `;
+
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  function getExtensionAssetUrl(path) {
+    if (typeof chrome !== "undefined" && chrome.runtime?.getURL) {
+      return chrome.runtime.getURL(path);
+    }
+
+    return path;
+  }
+
+  function showPanel(mode, opts) {
+    mode = mode || "popup";
+    opts = opts || {};
+    panelMode = mode;
+    ensureBrandFontLoaded();
 
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
-    overlay.style.cssText = `
-      position: fixed;
-      inset: 0;
-      background: transparent;
-      z-index: 2147483646;
-    `;
+    overlay.className = "agently-overlay";
 
     const panel = document.createElement("div");
-    panel.id = PANEL_ID;
-    panel.style.cssText = `
-      position: fixed;
-      left: ${Math.max(8, anchor.x)}px;
-      top: ${Math.max(8, anchor.y)}px;
-      width: min(420px, calc(100vw - 16px));
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: #111827;
-      color: #f9fafb;
-      box-shadow: 0 12px 36px rgba(0,0,0,.35);
-      z-index: 2147483647;
-      padding: 20px;
-      font-family: Inter, system-ui, sans-serif;
-    `;
+    if (mode === "drawer") {
+      panel.id = DRAWER_ID;
+      panel.className = "agently-panel agently-drawer";
+      panel.style.width = `${drawerWidth}px`;
+    } else if (mode === "bottom") {
+      panel.id = BOTTOM_PANEL_ID;
+      panel.className = "agently-panel agently-bottom-panel";
+      bottomPanelHeight = Math.min(bottomPanelHeight, Math.max(150, Math.floor(window.innerHeight * 0.5)));
+      panel.style.height = `${bottomPanelHeight}px`;
+    } else {
+      panel.id = PANEL_ID;
+      panel.className = "agently-panel";
+      panel.style.left = `${Math.max(PANEL_MARGIN, anchor.x)}px`;
+      panel.style.top = `${Math.max(PANEL_MARGIN, anchor.y)}px`;
+    }
 
     panel.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-        <div style="font-size:16px; opacity:.85; color:orange;">Agently
-        <br/>
-        <span style="font-size:10px; opacity:.6;">prompt away...</span>
+      <div class="agently-panel-inner">
+        <div class="agently-header">
+          <div class="agently-brand-block">
+            <div class="agently-brand">Agently</div>
+            <div class="agently-brand-byline">by <a class="agently-brand-author" href="https://www.linkedin.com/in/dawita/" target="_blank" rel="noopener noreferrer">dawit</a></div>
+          </div>
+          <div class="agently-header-actions">
+            <button id="agently-maximize" class="agently-icon-button${mode === "drawer" ? " agently-hidden" : ""}" title="Open in drawer" aria-label="Open in drawer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                <path d="M15 3v18"></path>
+              </svg>
+            </button>
+            <button id="agently-open-bottom" class="agently-icon-button${mode === "bottom" ? " agently-hidden" : ""}" title="Open as bottom panel" aria-label="Open as bottom panel">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                <path d="M3 15h18"></path>
+              </svg>
+            </button>
+            <button id="agently-settings" class="agently-icon-button" title="Open settings" aria-label="Open settings">
+              <img src="${getExtensionAssetUrl(SETTINGS_ICON_FILE)}" alt="" />
+            </button>
+            <button id="agently-mic" class="agently-icon-button" title="Voice input" aria-label="Voice input">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M12 19v3"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <rect x="9" y="2" width="6" height="13" rx="3"></rect>
+              </svg>
+            </button>
+          </div>
         </div>
-        <button id="agently-mic" title="Voice input" aria-label="Voice input"
-          style="width:28px; height:28px; border-radius:8px; border:1px solid #374151; background:transparent; color:inherit; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-            <path d="M12 19v3"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <rect x="9" y="2" width="6" height="13" rx="3"></rect>
-          </svg>
-        </button>
+        <textarea id="agently-input" class="agently-textarea" placeholder="Your prompt here..."></textarea>
+        <div class="agently-controls">
+          <label class="agently-queue-label">
+            <input id="agently-queue-mode" type="checkbox" />
+            <span style="font-size: 14px;">Queue mode</span>
+            <span class="agently-info-chip" title="Queue mode lets you add multiple prompts first, then send them together to your IDE"><sup>i</sup></span>
+          </label>
+          <div class="agently-actions">
+            <button id="agently-cancel" class="agently-button">Cancel</button>
+            <button id="agently-import" class="agently-icon-button agently-hidden" title="Import prompts from JSON" aria-label="Import prompts from JSON">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/></svg>
+            </button>
+            <button id="agently-add-queue" class="agently-icon-button agently-hidden" title="Add to queue" aria-label="Add to queue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+            <button id="agently-send" class="agently-button agently-button-primary">Send</button>
+          </div>
+        </div>
+        <div id="agently-status" class="agently-status"></div>
+        <div id="agently-queue-list" class="agently-queue-container"></div>
       </div>
-      <textarea id="agently-input" placeholder="change the background to blue"
-        style="width:100%; min-height:90px; border-radius:8px; border:1px solid #374151; background:#0b1220; color:#f9fafb; padding:8px;"></textarea>
-      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-        <button id="agently-cancel" style="padding:6px 10px; border-radius:8px; border:1px solid #374151; background:transparent; color:#f9fafb;">Cancel</button>
-        <button id="agently-send" style="padding:6px 10px; border-radius:8px; border:1px solid #2563eb; background:#2563eb; color:white;">Send</button>
-      </div>
-      <div id="agently-status" style="font-size:12px; opacity:.8; margin-top:6px;"></div>
     `;
 
-    overlay.addEventListener("click", removePanel);
-    document.body.append(overlay, panel);
+    panel.addEventListener("click", (event) => event.stopPropagation());
+
+    if (mode === "drawer") {
+      const resizeHandle = document.createElement("div");
+      resizeHandle.id = DRAWER_RESIZE_ID;
+      resizeHandle.className = "agently-drawer-resize";
+      resizeHandle.style.right = `${drawerWidth}px`;
+
+      let isResizing = false;
+      let resizeStartX = 0;
+      let resizeStartWidth = 0;
+
+      resizeHandle.addEventListener("mousedown", (e) => {
+        isResizing = true;
+        resizeStartX = e.clientX;
+        resizeStartWidth = panel.offsetWidth;
+        resizeHandle.classList.add("is-resizing");
+        e.preventDefault();
+      });
+
+      const onResizeMouseMove = (e) => {
+        if (!isResizing) {
+          return;
+        }
+        const delta = resizeStartX - e.clientX;
+        const newWidth = Math.max(280, Math.min(window.innerWidth - 40, resizeStartWidth + delta));
+        drawerWidth = newWidth;
+        panel.style.width = `${newWidth}px`;
+        resizeHandle.style.right = `${newWidth}px`;
+      };
+
+      const onResizeMouseUp = () => {
+        isResizing = false;
+        resizeHandle.classList.remove("is-resizing");
+      };
+
+      document.addEventListener("mousemove", onResizeMouseMove);
+      document.addEventListener("mouseup", onResizeMouseUp);
+
+      panel._cleanupResize = () => {
+        document.removeEventListener("mousemove", onResizeMouseMove);
+        document.removeEventListener("mouseup", onResizeMouseUp);
+      };
+
+      document.body.append(panel, resizeHandle);
+    } else if (mode === "bottom") {
+      const resizeHandle = document.createElement("div");
+      resizeHandle.id = BOTTOM_PANEL_RESIZE_ID;
+      resizeHandle.className = "agently-bottom-panel-resize";
+
+      const syncBottomResizeHandle = (height) => {
+        resizeHandle.style.bottom = `${Math.max(0, height)}px`;
+      };
+
+      syncBottomResizeHandle(bottomPanelHeight);
+
+      let isResizing = false;
+      let resizeStartY = 0;
+      let resizeStartHeight = 0;
+
+      resizeHandle.addEventListener("mousedown", (e) => {
+        isResizing = true;
+        resizeStartY = e.clientY;
+        resizeStartHeight = panel.offsetHeight;
+        resizeHandle.classList.add("is-resizing");
+        e.preventDefault();
+      });
+
+      const onResizeMouseMove = (e) => {
+        if (!isResizing) {
+          return;
+        }
+        const delta = resizeStartY - e.clientY;
+        const maxHeight = Math.max(150, Math.floor(window.innerHeight * 0.5));
+        const newHeight = Math.max(150, Math.min(maxHeight, resizeStartHeight + delta));
+        bottomPanelHeight = newHeight;
+        panel.style.height = `${newHeight}px`;
+        syncBottomResizeHandle(newHeight);
+      };
+
+      const onResizeMouseUp = () => {
+        isResizing = false;
+        resizeHandle.classList.remove("is-resizing");
+      };
+
+      document.addEventListener("mousemove", onResizeMouseMove);
+      document.addEventListener("mouseup", onResizeMouseUp);
+
+      panel._cleanupResize = () => {
+        document.removeEventListener("mousemove", onResizeMouseMove);
+        document.removeEventListener("mouseup", onResizeMouseUp);
+      };
+
+      document.body.append(panel, resizeHandle);
+    } else {
+      overlay.addEventListener("click", removePanel);
+      document.body.append(overlay, panel);
+
+      requestAnimationFrame(() => {
+        const panelRect = panel.getBoundingClientRect();
+        const maxLeft = Math.max(PANEL_MARGIN, window.innerWidth - panelRect.width - PANEL_MARGIN);
+        const maxTop = Math.max(PANEL_MARGIN, window.innerHeight - panelRect.height - PANEL_MARGIN);
+        const nextLeft = Math.min(Math.max(PANEL_MARGIN, anchor.x), maxLeft);
+        const nextTop = Math.min(Math.max(PANEL_MARGIN, anchor.y), maxTop);
+
+        panel.style.left = `${nextLeft}px`;
+        panel.style.top = `${nextTop}px`;
+      });
+    }
 
     const input = panel.querySelector("#agently-input");
     const sendBtn = panel.querySelector("#agently-send");
+    const addQueueBtn = panel.querySelector("#agently-add-queue");
+    const importBtn = panel.querySelector("#agently-import");
     const cancelBtn = panel.querySelector("#agently-cancel");
     const micBtn = panel.querySelector("#agently-mic");
     const status = panel.querySelector("#agently-status");
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const queueMode = panel.querySelector("#agently-queue-mode");
+    const queueList = panel.querySelector("#agently-queue-list");
+    const maximizeBtn = panel.querySelector("#agently-maximize");
+    const bottomPanelBtn = panel.querySelector("#agently-open-bottom");
+    const settingsBtn = panel.querySelector("#agently-settings");
+    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    input?.focus();
+    if (!(input instanceof HTMLTextAreaElement)) {
+      return;
+    }
 
-    const setMicActiveStyle = (isActive) => {
-      if (!micBtn) return;
-      micBtn.style.borderColor = isActive ? "#2563eb" : "#374151";
-      micBtn.style.color = isActive ? "#93c5fd" : "inherit";
+    activeMicButton = micBtn instanceof HTMLElement ? micBtn : null;
+    activeStatusNode = status instanceof HTMLElement ? status : null;
+
+    if (opts.initialValue) {
+      input.value = opts.initialValue;
+    }
+
+    if (queueMode instanceof HTMLInputElement) {
+      queueMode.checked = queueModeEnabled || queuedPrompts.length > 0;
+    }
+
+    input.focus();
+
+    const setMicActiveState = (isActive) => {
+      setRecordingUiActive(isActive);
+    };
+
+    const setHidden = (node, isHidden) => {
+      if (node instanceof HTMLElement) {
+        node.classList.toggle("agently-hidden", isHidden);
+      }
+    };
+
+    const updateQueueControls = () => {
+      const isQueueMode = Boolean(queueMode?.checked);
+      const hasQueuedItems = queuedPrompts.length > 0;
+      const hasInputText = Boolean(input.value.trim());
+
+      if (!isQueueMode) {
+        setHidden(sendBtn, false);
+        setHidden(importBtn, true);
+        setHidden(addQueueBtn, true);
+        if (addQueueBtn instanceof HTMLButtonElement) {
+          addQueueBtn.disabled = false;
+        }
+        return;
+      }
+
+      setHidden(importBtn, false);
+      setHidden(addQueueBtn, false);
+      setHidden(sendBtn, !hasQueuedItems);
+
+      if (addQueueBtn instanceof HTMLButtonElement) {
+        addQueueBtn.disabled = !hasInputText;
+      }
+    };
+
+    const renderQueueList = () => {
+      if (!(queueList instanceof HTMLElement)) {
+        return;
+      }
+
+      queueList.classList.toggle("agently-hidden", queuedPrompts.length === 0);
+
+      if (queuedPrompts.length === 0) {
+        queueList.innerHTML = "";
+        return;
+      }
+
+      if (editingQueueIndex !== null && queuedPrompts[editingQueueIndex]) {
+        const item = queuedPrompts[editingQueueIndex];
+        queueList.innerHTML = `
+          <div class="agently-queue-editor-shell">
+            <textarea class="agently-queue-edit" data-queue-edit-input-index="${editingQueueIndex}">${escapeHtml(item.text)}</textarea>
+            <button class="agently-queue-save" data-queue-save-index="${editingQueueIndex}">Save</button>
+          </div>
+        `;
+
+        const editNode = queueList.querySelector(`[data-queue-edit-input-index="${editingQueueIndex}"]`);
+        if (editNode instanceof HTMLTextAreaElement) {
+          editNode.focus();
+          editNode.setSelectionRange(editNode.value.length, editNode.value.length);
+        }
+        return;
+      }
+
+      queueList.innerHTML = `
+        <div class="agently-queue-list">
+          ${queuedPrompts.map((item, index) => `
+            <div class="agently-queue-row">
+              <div class="agently-queue-text" data-queue-edit-index="${index}" title="Double-click to edit">${escapeHtml(truncatePreview(item.text, 300))}</div>
+              <button class="agently-queue-remove" data-queue-remove-index="${index}" aria-label="Remove queued prompt" title="Remove from queue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+              </button>
+            </div>
+          `).join("")}
+        </div>
+      `;
     };
 
     const startRecording = (source) => {
-      if (!SR) {
+      if (!SpeechRecognitionCtor) {
         setStatus(status, "Voice input is not supported in this browser.");
         return false;
       }
 
       if (activeRecognition) {
-        return holdSource === source;
+        return false;
       }
 
-      const recognition = new SR();
+      const recognition = new SpeechRecognitionCtor();
       activeRecognition = recognition;
-      holdSource = source;
       recognition.lang = "en-US";
       recognition.interimResults = false;
       recognition.continuous = true;
 
-      setMicActiveStyle(true);
-      setStatus(status, "Listening... release to stop.");
+      setMicActiveState(true);
+      setStatus(status, source === "mouse" ? "Listening... click mic again or press Escape to stop." : "Listening... press Escape to stop.");
 
       recognition.onresult = (event) => {
         let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; i += 1) {
-          transcript += event.results[i][0].transcript;
+        for (let index = event.resultIndex; index < event.results.length; index += 1) {
+          transcript += event.results[index][0].transcript;
         }
 
         input.value = [input.value.trim(), transcript.trim()].filter(Boolean).join(" ").trimStart();
+        updateQueueControls();
       };
 
       recognition.onerror = () => {
+        activeRecognition = null;
+        setMicActiveState(false);
         setStatus(status, "Voice input failed. Try again.");
       };
 
       recognition.onend = () => {
         activeRecognition = null;
-        holdSource = null;
-        setMicActiveStyle(false);
+        setMicActiveState(false);
       };
 
       recognition.start();
       return true;
     };
 
-    const stopRecording = (source) => {
-      if (!activeRecognition || holdSource !== source) {
-        return;
-      }
+    const sendPayload = async (payload) => {
+      const response = await fetch(BRIDGE_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-      try {
-        activeRecognition.stop();
-      } catch {
-        // No-op.
+      if (!response.ok) {
+        throw new Error(`Bridge error (${response.status}). Is VS Code extension running?`);
       }
     };
 
-    cancelBtn?.addEventListener("click", removePanel);
-    micBtn?.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
-      startRecording("mic-hold");
-    });
-    micBtn?.addEventListener("pointerup", () => stopRecording("mic-hold"));
-    micBtn?.addEventListener("pointercancel", () => stopRecording("mic-hold"));
-    micBtn?.addEventListener("mouseleave", () => stopRecording("mic-hold"));
-
-    input?.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowUp" && event.shiftKey) {
-        event.preventDefault();
-        startRecording("keyboard-hold");
-      }
-    });
-
-    input?.addEventListener("keyup", (event) => {
-      if (event.key === "ArrowUp" || event.key === "Shift") {
-        stopRecording("keyboard-hold");
-      }
-    });
-
-    input?.addEventListener("blur", () => {
-      stopRecording("keyboard-hold");
-    });
-    sendBtn?.addEventListener("click", async () => {
-      const text = input?.value?.trim();
+    const getCurrentPayload = () => {
+      const text = input.value.trim();
       if (!text) {
-        setStatus(status, "Please enter a prompt.");
-        return;
+        return null;
       }
 
-      setStatus(status, "Sending…");
-
-      const payload = {
+      return {
         text,
         source: "chrome-extension",
         context: buildContext(selectedElement)
       };
+    };
 
-      try {
-        const response = await fetch(BRIDGE_URL, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
+    cancelBtn?.addEventListener("click", removePanel);
+    queueMode?.addEventListener("change", () => {
+      queueModeEnabled = Boolean(queueMode.checked);
+      updateQueueControls();
+    });
 
-        if (!response.ok) {
-          setStatus(status, `Bridge error (${response.status}). Is VS Code extension running?`);
+    input.addEventListener("input", () => {
+      updateQueueControls();
+    });
+
+    addQueueBtn?.addEventListener("click", () => {
+      const payload = getCurrentPayload();
+      if (!payload) {
+        setStatus(status, "Please enter a prompt before adding to queue.");
+        return;
+      }
+
+      queuedPrompts.push(payload);
+      editingQueueIndex = null;
+      queueModeEnabled = true;
+
+      if (queueMode instanceof HTMLInputElement) {
+        queueMode.checked = true;
+      }
+
+      input.value = "";
+      setStatus(status, `Added to queue. ${queuedPrompts.length} prompt(s) queued.`);
+      updateQueueControls();
+      renderQueueList();
+      input.focus();
+    });
+
+    importBtn?.addEventListener("click", () => {
+      const picker = document.createElement("input");
+      picker.type = "file";
+      picker.accept = ".json,application/json";
+
+      picker.addEventListener("change", async () => {
+        const file = picker.files?.[0];
+        if (!file) {
           return;
         }
 
-        setStatus(status, "Sent to Agently in VS Code.");
-        setTimeout(removePanel, 1200);
+        try {
+          const raw = await file.text();
+          const parsed = JSON.parse(raw);
+          const items = Array.isArray(parsed?.queueItems)
+            ? parsed.queueItems
+            : Array.isArray(parsed?.prompts)
+              ? parsed.prompts
+              : null;
+
+          if (!items) {
+            setStatus(status, "Invalid JSON format. Expected { \"queueItems\": [\"prompt1\"] }.");
+            return;
+          }
+
+          const importedPayloads = items
+            .filter((item) => typeof item === "string")
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .map((text) => ({
+              text,
+              source: "chrome-extension",
+              context: buildContext(selectedElement)
+            }));
+
+          if (importedPayloads.length === 0) {
+            setStatus(status, "No valid queue items found in file.");
+            return;
+          }
+
+          queuedPrompts.push(...importedPayloads);
+          queueModeEnabled = true;
+          editingQueueIndex = null;
+
+          if (queueMode instanceof HTMLInputElement) {
+            queueMode.checked = true;
+          }
+
+          setStatus(status, `Imported ${importedPayloads.length} prompt(s). ${queuedPrompts.length} prompt(s) queued.`);
+          updateQueueControls();
+          renderQueueList();
+          input.focus();
+        } catch {
+          setStatus(status, "Could not import queue. Check that the file is valid JSON.");
+        }
+      });
+
+      picker.click();
+    });
+
+    queueList?.addEventListener("click", (event) => {
+      const source = event.target instanceof Element ? event.target : null;
+      if (!source) {
+        return;
+      }
+
+      const saveTarget = source.closest("[data-queue-save-index]");
+      if (saveTarget) {
+        const index = Number(saveTarget.getAttribute("data-queue-save-index"));
+        if (!Number.isInteger(index) || index < 0 || index >= queuedPrompts.length) {
+          return;
+        }
+
+        const editInput = queueList.querySelector(`[data-queue-edit-input-index="${index}"]`);
+        if (!(editInput instanceof HTMLTextAreaElement)) {
+          return;
+        }
+
+        const nextText = editInput.value.trim();
+        if (!nextText) {
+          setStatus(status, "Queue item cannot be empty.");
+          return;
+        }
+
+        queuedPrompts[index].text = nextText;
+        editingQueueIndex = null;
+        setStatus(status, `${queuedPrompts.length} prompt(s) queued.`);
+        renderQueueList();
+        return;
+      }
+
+      const removeTarget = source.closest("[data-queue-remove-index]");
+      if (!removeTarget) {
+        return;
+      }
+
+      const index = Number(removeTarget.getAttribute("data-queue-remove-index"));
+      if (!Number.isInteger(index) || index < 0 || index >= queuedPrompts.length) {
+        return;
+      }
+
+      queuedPrompts.splice(index, 1);
+      if (editingQueueIndex !== null) {
+        if (editingQueueIndex === index) {
+          editingQueueIndex = null;
+        } else if (editingQueueIndex > index) {
+          editingQueueIndex -= 1;
+        }
+      }
+
+      setStatus(status, queuedPrompts.length > 0 ? `${queuedPrompts.length} prompt(s) queued.` : "Queue is empty.");
+      updateQueueControls();
+      renderQueueList();
+    });
+
+    queueList?.addEventListener("dblclick", (event) => {
+      const source = event.target instanceof Element ? event.target : null;
+      if (!source) {
+        return;
+      }
+
+      const editTarget = source.closest("[data-queue-edit-index]");
+      if (!editTarget) {
+        return;
+      }
+
+      const index = Number(editTarget.getAttribute("data-queue-edit-index"));
+      if (!Number.isInteger(index) || index < 0 || index >= queuedPrompts.length) {
+        return;
+      }
+
+      editingQueueIndex = index;
+      renderQueueList();
+    });
+
+    maximizeBtn?.addEventListener("click", () => {
+      const currentValue = input instanceof HTMLTextAreaElement ? input.value : "";
+      removePanel();
+      showPanel("drawer", { initialValue: currentValue });
+    });
+
+    bottomPanelBtn?.addEventListener("click", () => {
+      const currentValue = input instanceof HTMLTextAreaElement ? input.value : "";
+      removePanel();
+      showPanel("bottom", { initialValue: currentValue });
+    });
+
+    settingsBtn?.addEventListener("click", async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "agently.openSettingsPage" });
+        if (!response?.ok) {
+          throw new Error(response?.error || "Could not open the settings page.");
+        }
       } catch {
-        setStatus(status, "Cannot reach local bridge. Start VS Code Agently extension first.");
+        setStatus(status, "Could not open the settings page.");
       }
     });
+
+    micBtn?.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (activeRecognition) {
+        stopActiveRecognition();
+        return;
+      }
+
+      startRecording("mouse");
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowUp" && event.shiftKey) {
+        event.preventDefault();
+        if (!activeRecognition) {
+          startRecording("keyboard");
+        }
+        return;
+      }
+
+      if (event.key === "Enter" && !event.shiftKey) {
+        const isQueueMode = queueMode instanceof HTMLInputElement && queueMode.checked;
+        if (isQueueMode) {
+          event.preventDefault();
+          const payload = getCurrentPayload();
+          if (!payload) {
+            setStatus(status, "Please enter a prompt before adding to queue.");
+            return;
+          }
+          queuedPrompts.push(payload);
+          editingQueueIndex = null;
+          input.value = "";
+          setStatus(status, `Added to queue. ${queuedPrompts.length} prompt(s) queued.`);
+          updateQueueControls();
+          renderQueueList();
+          input.focus();
+        }
+      }
+    });
+
+    sendBtn?.addEventListener("click", async () => {
+      const currentPayload = getCurrentPayload();
+      const hasQueuedItems = queuedPrompts.length > 0;
+
+      if (!currentPayload && !hasQueuedItems) {
+        setStatus(status, "Please enter a prompt.");
+        return;
+      }
+
+      if (hasQueuedItems && currentPayload) {
+        queuedPrompts.push(currentPayload);
+      }
+
+      const toSend = hasQueuedItems ? [...queuedPrompts] : currentPayload ? [currentPayload] : [];
+      if (toSend.length === 0) {
+        setStatus(status, "Nothing to send.");
+        return;
+      }
+
+      setStatus(status, `Sending ${toSend.length} prompt(s)…`);
+
+      try {
+        for (const payload of toSend) {
+          await sendPayload(payload);
+        }
+
+        queuedPrompts = [];
+        editingQueueIndex = null;
+        queueModeEnabled = false;
+
+        if (queueMode instanceof HTMLInputElement) {
+          queueMode.checked = false;
+        }
+
+        input.value = "";
+        setStatus(status, "Sent to Agently in VS Code.");
+        updateQueueControls();
+        renderQueueList();
+        setTimeout(removePanel, 1200);
+      } catch (error) {
+        const message = error instanceof Error
+          ? error.message
+          : "Cannot reach local bridge. Start VS Code Agently extension first.";
+        setStatus(status, message);
+      }
+    });
+
+    updateQueueControls();
+    renderQueueList();
   }
 
   function setStatus(node, message) {
-    if (node) node.textContent = message;
+    if (node) {
+      node.textContent = message;
+    }
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[ch]));
+  }
+
+  function truncatePreview(text, maxChars) {
+    const value = String(text ?? "");
+    if (value.length <= maxChars) {
+      return value;
+    }
+
+    return `${value.slice(0, maxChars)}...`;
   }
 
   function removePanel() {
     if (activeRecognition) {
-      try {
-        activeRecognition.stop();
-      } catch {
-        // No-op.
-      }
-      activeRecognition = null;
+      stopActiveRecognition();
+    }
+
+    const drawer = document.getElementById(DRAWER_ID);
+    if (drawer?._cleanupResize) {
+      drawer._cleanupResize();
+    }
+
+    const bottomPanel = document.getElementById(BOTTOM_PANEL_ID);
+    if (bottomPanel?._cleanupResize) {
+      bottomPanel._cleanupResize();
     }
 
     document.getElementById(OVERLAY_ID)?.remove();
     document.getElementById(PANEL_ID)?.remove();
+    document.getElementById(DRAWER_ID)?.remove();
+    document.getElementById(DRAWER_RESIZE_ID)?.remove();
+    document.getElementById(BOTTOM_PANEL_ID)?.remove();
+    document.getElementById(BOTTOM_PANEL_RESIZE_ID)?.remove();
+    activeMicButton = null;
+    activeStatusNode = null;
+    panelMode = "popup";
   }
 
   function buildContext(element) {
@@ -243,17 +867,22 @@
     };
   }
 
-  function buildSelector(el) {
-    if (!(el instanceof Element)) return "";
-    if (el.id) return `#${cssEscape(el.id)}`;
+  function buildSelector(element) {
+    if (!(element instanceof Element)) {
+      return "";
+    }
+
+    if (element.id) {
+      return `#${cssEscape(element.id)}`;
+    }
 
     const parts = [];
-    let current = el;
+    let current = element;
 
     while (current && current.nodeType === 1 && parts.length < 4) {
       let part = current.tagName.toLowerCase();
       if (current.classList.length > 0) {
-        part += "." + Array.from(current.classList).slice(0, 2).map(cssEscape).join(".");
+        part += `.${Array.from(current.classList).slice(0, 2).map(cssEscape).join(".")}`;
       }
 
       const parent = current.parentElement;

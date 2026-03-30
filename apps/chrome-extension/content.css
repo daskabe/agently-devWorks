@@ -1,0 +1,574 @@
+.agently-overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 2147483646;
+}
+
+.agently-panel {
+  --ag-bg: #000000;
+  --ag-surface: rgba(255, 255, 255, 0.04);
+  --ag-surface-strong: #0b1220;
+  --ag-text: #f9fafb;
+  --ag-text-muted: rgba(249, 250, 251, 0.7);
+  --ag-title: #f59e0b;
+  --ag-border: rgba(255, 255, 255, 0.18);
+  --ag-border-muted: #374151;
+  --ag-shadow: rgb(13 60 54 / 98%) 0 12px 36px;
+  --ag-primary: #2563eb;
+  --ag-primary-text: #ffffff;
+  --ag-secondary: #f59e0b;
+  --ag-secondary-text: #111827;
+  --ag-success: #10b981;
+  --ag-success-text: #6ee7b7;
+  --ag-danger: #fca5a5;
+  --ag-scrollbar: rgba(156, 163, 175, 0.7);
+  --ag-scrollbar-hover: rgba(209, 213, 219, 0.85);
+  --ag-accent-glow: rgba(202, 254, 213, 0.22);
+  --ag-focus-ring: rgba(202, 254, 213, 0.28);
+
+  position: fixed;
+  width: min(420px, calc(100vw - 16px));
+  max-height: min(800px, calc(100vh - 16px));
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid var(--ag-border);
+  background: var(--ag-bg);
+  color: var(--ag-text);
+  box-shadow: var(--ag-shadow);
+  z-index: 2147483647;
+  /* padding: 20px; */
+  font-family: Inter, system-ui, sans-serif;
+  box-shadow: var(--ag-shadow);
+}
+
+@media (prefers-color-scheme: light) {
+  .agently-panel {
+    --ag-bg: #ffffff;
+    --ag-surface: rgba(15, 23, 42, 0.04);
+    --ag-surface-strong: #f8fafc;
+    --ag-text: #0f172a;
+    --ag-text-muted: rgba(15, 23, 42, 0.68);
+    --ag-title: #000;
+    --ag-border: rgba(15, 23, 42, 0.12);
+    --ag-border-muted: #166534;
+    --ag-shadow: rgba(25, 85, 68, 0.508) 0 12px 36px;
+    --ag-primary: #166534;
+    --ag-primary-text: #ffffff;
+    --ag-secondary: transparent;
+    --ag-secondary-text: #111827;
+    --ag-success: #166534;
+    --ag-success-text: #166534;
+    --ag-danger: #dc2626;
+    --ag-scrollbar: rgba(100, 116, 139, 0.55);
+    --ag-scrollbar-hover: rgba(71, 85, 105, 0.75);
+    --ag-accent-glow: rgba(17, 24, 39, 0.12);
+    --ag-focus-ring: rgba(107, 114, 128, 0.24);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .agently-panel {
+  --ag-bg: #282828;
+  --ag-surface: rgba(255, 255, 255, 0.04);
+  --ag-surface-strong: #222323;
+  --ag-text: white;
+  --ag-text-muted: rgba(249, 250, 251, 0.7);
+  --ag-title: #cafed5;
+  --ag-border: rgba(255, 255, 255, 0.18);
+  --ag-border-muted: #cafed5;
+    --ag-shadow: rgba(25, 85, 68, 0.508) 0 12px 36px;
+  --ag-primary: #cafed5;
+  --ag-primary-text: #000000;
+  --ag-secondary: transparent;
+  --ag-secondary-text: white;
+  --ag-success: #cafed5;
+  --ag-success-text: #cafed5;
+  --ag-danger: #fca5a5;
+  --ag-scrollbar: rgba(156, 163, 175, 0.7);
+  --ag-scrollbar-hover: rgba(209, 213, 219, 0.85);
+  --ag-accent-glow: rgba(202, 254, 213, 0.42);
+  --ag-focus-ring: rgba(202, 254, 213, 0.32);
+  }
+}
+
+input[type=checkbox]
+{
+  /* Double-sized Checkboxes */
+  -ms-transform: scale(1.3); /* IE */
+  -moz-transform: scale(1.3); /* FF */
+  -webkit-transform: scale(1.3); /* Safari and Chrome */
+  -o-transform: scale(1.3); /* Opera */
+  transform: scale(1.3);
+  padding: 5px;
+  accent-color: var(--ag-primary);
+  border: 0.5px solid var(--ag-border);
+  outline: 0.5px solid var(--ag-border);
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 0.5px var(--ag-border);
+}
+
+input[type=checkbox]:checked {
+  border-color: var(--ag-border);
+  outline-color: var(--ag-border);
+  box-shadow: inset 0 0 0 0.5px var(--ag-border);
+}
+
+/* Might want to wrap a span around your checkbox text */
+.checkboxtext
+{
+  /* Checkbox text */
+  font-size: 110%;
+  display: inline;
+}
+
+.agently-panel,
+.agently-panel * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ag-scrollbar) transparent;
+}
+
+.agently-panel *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.agently-panel *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agently-panel *::-webkit-scrollbar-thumb {
+  background: var(--ag-scrollbar);
+  border-radius: 999px;
+}
+
+.agently-panel *::-webkit-scrollbar-thumb:hover {
+  background: var(--ag-scrollbar-hover);
+}
+
+.agently-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.agently-brand,
+.agently-brand-block {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.agently-brand {
+  font-size: 32px;
+  color: var(--ag-title);
+  font-family: "Moirai One", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  text-shadow: -2px 1px 11px var(--ag-accent-glow);
+  font-weight: bold;
+}
+
+.agently-brand-subtitle {
+  display: block;
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.agently-brand-byline {
+  font-size: 10px;
+  opacity: 0.5;
+  margin-top: 1px;
+}
+
+.agently-brand-author {
+  color: var(--ag-title);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.agently-brand-author:hover {
+  opacity: 1;
+}
+
+.agently-icon-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--ag-border-muted);
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.agently-icon-button img {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.agently-icon-button.is-active {
+  border-color: var(--ag-primary);
+  color: var(--ag-primary);
+}
+
+#agently-mic.is-active {
+  border-color: #ef4444;
+  color: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  animation: agently-mic-pulse 1.4s ease-out infinite;
+}
+
+@keyframes agently-mic-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.agently-icon-button:disabled {
+  border: 1px solid grey;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#agently-import:not(:disabled),
+#agently-add-queue:not(:disabled) {
+  border-color: var(--ag-primary);
+}
+
+.agently-textarea {
+  max-width: stretch;
+  min-width: 380px;
+  min-height:100px;
+  max-height: 350px;
+  border-radius: 8px;
+  border: 1px solid var(--ag-border-muted);
+  background: var(--ag-surface-strong);
+  color: var(--ag-text);
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.agently-textarea:focus,
+.agently-textarea:focus-visible {
+  outline: none;
+  border-color: var(--ag-primary);
+  box-shadow: 0 0 0 2px var(--ag-focus-ring);
+}
+
+.agently-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.agently-queue-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  user-select: none;
+}
+
+.agently-info-chip {
+  opacity: 0.75;
+  border: 1px solid var(--ag-border-muted);
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: help;
+}
+
+.agently-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.agently-button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ag-border-muted);
+  background: transparent;
+  color: var(--ag-text);
+}
+
+.agently-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.agently-hidden {
+  display: none !important;
+}
+
+.agently-button-primary {
+  border-color: var(--ag-primary);
+  background: var(--ag-primary);
+  color: var(--ag-primary-text);
+  cursor: pointer;
+}
+
+.agently-button-secondary {
+  border-color: black;
+  background: var(--ag-secondary);
+  color: var(--ag-secondary-text);
+}
+
+.agently-status {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 12px;
+}
+
+.agently-queue-container {
+  margin-top: 10px;
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+.agently-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+  min-height: 90px;
+  padding-right: 5px;
+}
+
+.agently-queue-editor-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 210px;
+  height: 100%;
+  padding: 10px;
+  border: 1px solid var(--ag-border);
+  border-radius: 8px;
+  /* background: var(--ag-surface); */
+  box-sizing: border-box;
+}
+
+.agently-queue-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--ag-border);
+  border-radius: 8px;
+padding-left: 12px;
+}
+
+.agently-queue-remove {
+  opacity: 0;
+  pointer-events: none;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--ag-danger);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+  flex: 0 0 auto;
+}
+
+.agently-queue-row:hover .agently-queue-remove {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.agently-queue-text {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ag-text);
+  word-break: break-word;
+  flex: 1 1 auto;
+}
+
+.agently-queue-edit {
+  width: 100%;
+  min-height: 52px;
+  height: 100%;
+  flex: 1 1 auto;
+  border-radius: 8px;
+  border: 1px solid var(--ag-border-muted);
+  background: var(--ag-surface-strong);
+  color: var(--ag-text);
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.agently-queue-save {
+  border: 1px solid var(--ag-success);
+  background: color-mix(in srgb, var(--ag-success) 15%, transparent);
+  color: var(--ag-success-text);
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 9px;
+  height: fit-content;
+  align-self: flex-start;
+  cursor: pointer;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.agently-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.agently-panel-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.agently-drawer {
+  position: fixed !important;
+  right: 0 !important;
+  top: 0 !important;
+  left: auto !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  width: 460px;
+  max-width: none !important;
+  min-width: 280px;
+  overflow-y: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 0px !important;
+  background-color: var(--ag-bg) !important;
+  /* background-image: linear-gradient(
+      to bottom,
+      var(--ag-bg) 0%,
+color-mix(in srgb, var(--ag-bg) 90%, transparent) 50%,
+color-mix(in srgb, var(--ag-bg) 55%, transparent) 85%,
+      transparent 100%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Cpath fill='%23535353' fill-opacity='0.24' d='M192 15v2a11 11 0 0 0-11 11c0 1.94 1.16 4.75 2.53 6.11l2.36 2.36a6.93 6.93 0 0 1 1.22 7.56l-.43.84a8.08 8.08 0 0 1-6.66 4.13H145v35.02a6.1 6.1 0 0 0 3.03 4.87l.84.43c1.58.79 4 .4 5.24-.85l2.36-2.36a12.04 12.04 0 0 1 7.51-3.11 13 13 0 1 1 .02 26 12 12 0 0 1-7.53-3.11l-2.36-2.36a4.93 4.93 0 0 0-5.24-.85l-.84.43a6.1 6.1 0 0 0-3.03 4.87V143h35.02a8.08 8.08 0 0 1 6.66 4.13l.43.84a6.91 6.91 0 0 1-1.22 7.56l-2.36 2.36A10.06 10.06 0 0 0 181 164a11 11 0 0 0 11 11v2a13 13 0 0 1-13-13 12 12 0 0 1 3.11-7.53l2.36-2.36a4.93 4.93 0 0 0 .85-5.24l-.43-.84a6.1 6.1 0 0 0-4.87-3.03H145v35.02a8.08 8.08 0 0 1-4.13 6.66l-.84.43a6.91 6.91 0 0 1-7.56-1.22l-2.36-2.36A10.06 10.06 0 0 0 124 181a11 11 0 0 0-11 11h-2a13 13 0 0 1 13-13c2.47 0 5.79 1.37 7.53 3.11l2.36 2.36a4.94 4.94 0 0 0 5.24.85l.84-.43a6.1 6.1 0 0 0 3.03-4.87V145h-35.02a8.08 8.08 0 0 1-6.66-4.13l-.43-.84a6.91 6.91 0 0 1 1.22-7.56l2.36-2.36A10.06 10.06 0 0 0 107 124a11 11 0 0 0-22 0c0 1.94 1.16 4.75 2.53 6.11l2.36 2.36a6.93 6.93 0 0 1 1.22 7.56l-.43.84a8.08 8.08 0 0 1-6.66 4.13H49v35.02a6.1 6.1 0 0 0 3.03 4.87l.84.43c1.58.79 4 .4 5.24-.85l2.36-2.36a12.04 12.04 0 0 1 7.51-3.11A13 13 0 0 1 81 192h-2a11 11 0 0 0-11-11c-1.94 0-4.75 1.16-6.11 2.53l-2.36 2.36a6.93 6.93 0 0 1-7.56 1.22l-.84-.43a8.08 8.08 0 0 1-4.13-6.66V145H11.98a6.1 6.1 0 0 0-4.87 3.03l-.43.84c-.79 1.58-.4 4 .85 5.24l2.36 2.36a12.04 12.04 0 0 1 3.11 7.51A13 13 0 0 1 0 177v-2a11 11 0 0 0 11-11c0-1.94-1.16-4.75-2.53-6.11l-2.36-2.36a6.93 6.93 0 0 1-1.22-7.56l.43-.84a8.08 8.08 0 0 1 6.66-4.13H47v-35.02a6.1 6.1 0 0 0-3.03-4.87l-.84-.43c-1.59-.8-4-.4-5.24.85l-2.36 2.36A12 12 0 0 1 28 109a13 13 0 1 1 0-26c2.47 0 5.79 1.37 7.53 3.11l2.36 2.36a4.94 4.94 0 0 0 5.24.85l.84-.43A6.1 6.1 0 0 0 47 84.02V49H11.98a8.08 8.08 0 0 1-6.66-4.13l-.43-.84a6.91 6.91 0 0 1 1.22-7.56l2.36-2.36A10.06 10.06 0 0 0 11 28 11 11 0 0 0 0 17v-2a13 13 0 0 1 13 13c0 2.47-1.37 5.79-3.11 7.53l-2.36 2.36a4.94 4.94 0 0 0-.85 5.24l.43.84A6.1 6.1 0 0 0 11.98 47H47V11.98a8.08 8.08 0 0 1 4.13-6.66l.84-.43a6.91 6.91 0 0 1 7.56 1.22l2.36 2.36A10.06 10.06 0 0 0 68 11 11 11 0 0 0 79 0h2a13 13 0 0 1-13 13 12 12 0 0 1-7.53-3.11l-2.36-2.36a4.93 4.93 0 0 0-5.24-.85l-.84.43A6.1 6.1 0 0 0 49 11.98V47h35.02a8.08 8.08 0 0 1 6.66 4.13l.43.84a6.91 6.91 0 0 1-1.22 7.56l-2.36 2.36A10.06 10.06 0 0 0 85 68a11 11 0 0 0 22 0c0-1.94-1.16-4.75-2.53-6.11l-2.36-2.36a6.93 6.93 0 0 1-1.22-7.56l.43-.84a8.08 8.08 0 0 1 6.66-4.13H143V11.98a6.1 6.1 0 0 0-3.03-4.87l-.84-.43c-1.59-.8-4-.4-5.24.85l-2.36 2.36A12 12 0 0 1 124 13a13 13 0 0 1-13-13h2a11 11 0 0 0 11 11c1.94 0 4.75-1.16 6.11-2.53l2.36-2.36a6.93 6.93 0 0 1 7.56-1.22l.84.43a8.08 8.08 0 0 1 4.13 6.66V47h35.02a6.1 6.1 0 0 0 4.87-3.03l.43-.84c.8-1.59.4-4-.85-5.24l-2.36-2.36A12 12 0 0 1 179 28a13 13 0 0 1 13-13zM84.02 143a6.1 6.1 0 0 0 4.87-3.03l.43-.84c.8-1.59.4-4-.85-5.24l-2.36-2.36A12 12 0 0 1 83 124a13 13 0 1 1 26 0c0 2.47-1.37 5.79-3.11 7.53l-2.36 2.36a4.94 4.94 0 0 0-.85 5.24l.43.84a6.1 6.1 0 0 0 4.87 3.03H143v-35.02a8.08 8.08 0 0 1 4.13-6.66l.84-.43a6.91 6.91 0 0 1 7.56 1.22l2.36 2.36A10.06 10.06 0 0 0 164 107a11 11 0 0 0 0-22c-1.94 0-4.75 1.16-6.11 2.53l-2.36 2.36a6.93 6.93 0 0 1-7.56 1.22l-.84-.43a8.08 8.08 0 0 1-4.13-6.66V49h-35.02a6.1 6.1 0 0 0-4.87 3.03l-.43.84c-.79 1.58-.4 4 .85 5.24l2.36 2.36a12.04 12.04 0 0 1 3.11 7.51A13 13 0 1 1 83 68a12 12 0 0 1 3.11-7.53l2.36-2.36a4.93 4.93 0 0 0 .85-5.24l-.43-.84A6.1 6.1 0 0 0 84.02 49H49v35.02a8.08 8.08 0 0 1-4.13 6.66l-.84.43a6.91 6.91 0 0 1-7.56-1.22l-2.36-2.36A10.06 10.06 0 0 0 28 85a11 11 0 0 0 0 22c1.94 0 4.75-1.16 6.11-2.53l2.36-2.36a6.93 6.93 0 0 1 7.56-1.22l.84.43a8.08 8.08 0 0 1 4.13 6.66V143h35.02z'%3E%3C/path%3E%3C/svg%3E") !important;
+   */
+    background-repeat: no-repeat, repeat !important;
+  background-size: 100% 100%, 192px 192px !important;
+}
+
+.agently-drawer .agently-textarea {
+  min-width: unset !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.agently-drawer .agently-queue-container {
+  flex: 1 1 0;
+  max-height: none !important;
+  overflow-y: auto;
+}
+
+.agently-drawer-resize {
+  position: fixed;
+  top: 0;
+  width: 6px;
+  height: 100vh;
+  cursor: col-resize;
+  z-index: 2147483647;
+  background: transparent;
+  transition: background 150ms ease;
+}
+
+.agently-drawer-resize:hover,
+.agently-drawer-resize.is-resizing {
+  background: var(--ag-primary, cornflowerblue);
+  opacity: 0.4;
+}
+
+.agently-bottom-panel {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: auto !important;
+  width: 100vw !important;
+  max-width: none !important;
+  min-width: unset !important;
+  border-radius: 0px !important;
+  overflow-y: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: var(--ag-bg) !important;
+  /* background-image: linear-gradient(
+      to top,
+      var(--ag-bg) 0%,
+      color-mix(in srgb, var(--ag-bg) 90%, transparent) 50%,
+      color-mix(in srgb, var(--ag-bg) 55%, transparent) 85%,
+      transparent 100%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Cpath fill='%23535353' fill-opacity='0.24' d='M192 15v2a11 11 0 0 0-11 11c0 1.94 1.16 4.75 2.53 6.11l2.36 2.36a6.93 6.93 0 0 1 1.22 7.56l-.43.84a8.08 8.08 0 0 1-6.66 4.13H145v35.02a6.1 6.1 0 0 0 3.03 4.87l.84.43c1.58.79 4 .4 5.24-.85l2.36-2.36a12.04 12.04 0 0 1 7.51-3.11 13 13 0 1 1 .02 26 12 12 0 0 1-7.53-3.11l-2.36-2.36a4.93 4.93 0 0 0-5.24-.85l-.84.43a6.1 6.1 0 0 0-3.03 4.87V143h35.02a8.08 8.08 0 0 1 6.66 4.13l.43.84a6.91 6.91 0 0 1-1.22 7.56l-2.36 2.36A10.06 10.06 0 0 0 181 164a11 11 0 0 0 11 11v2a13 13 0 0 1-13-13 12 12 0 0 1 3.11-7.53l2.36-2.36a4.93 4.93 0 0 0 .85-5.24l-.43-.84a6.1 6.1 0 0 0-4.87-3.03H145v35.02a8.08 8.08 0 0 1-4.13 6.66l-.84.43a6.91 6.91 0 0 1-7.56-1.22l-2.36-2.36A10.06 10.06 0 0 0 124 181a11 11 0 0 0-11 11h-2a13 13 0 0 1 13-13c2.47 0 5.79 1.37 7.53 3.11l2.36 2.36a4.94 4.94 0 0 0 5.24.85l.84-.43a6.1 6.1 0 0 0 3.03-4.87V145h-35.02a8.08 8.08 0 0 1-6.66-4.13l-.43-.84a6.91 6.91 0 0 1 1.22-7.56l2.36-2.36A10.06 10.06 0 0 0 107 124a11 11 0 0 0-22 0c0 1.94 1.16 4.75 2.53 6.11l2.36 2.36a6.93 6.93 0 0 1 1.22 7.56l-.43.84a8.08 8.08 0 0 1-6.66 4.13H49v35.02a6.1 6.1 0 0 0 3.03 4.87l.84.43c1.58.79 4 .4 5.24-.85l2.36-2.36a12.04 12.04 0 0 1 7.51-3.11A13 13 0 0 1 81 192h-2a11 11 0 0 0-11-11c-1.94 0-4.75 1.16-6.11 2.53l-2.36 2.36a6.93 6.93 0 0 1-7.56 1.22l-.84-.43a8.08 8.08 0 0 1-4.13-6.66V145H11.98a6.1 6.1 0 0 0-4.87 3.03l-.43.84c-.79 1.58-.4 4 .85 5.24l2.36 2.36a12.04 12.04 0 0 1 3.11 7.51A13 13 0 0 1 0 177v-2a11 11 0 0 0 11-11c0-1.94-1.16-4.75-2.53-6.11l-2.36-2.36a6.93 6.93 0 0 1-1.22-7.56l.43-.84a8.08 8.08 0 0 1 6.66-4.13H47v-35.02a6.1 6.1 0 0 0-3.03-4.87l-.84-.43c-1.59-.8-4-.4-5.24.85l-2.36 2.36A12 12 0 0 1 28 109a13 13 0 1 1 0-26c2.47 0 5.79 1.37 7.53 3.11l2.36 2.36a4.94 4.94 0 0 0 5.24.85l.84-.43A6.1 6.1 0 0 0 47 84.02V49H11.98a8.08 8.08 0 0 1-6.66-4.13l-.43-.84a6.91 6.91 0 0 1 1.22-7.56l2.36-2.36A10.06 10.06 0 0 0 11 28 11 11 0 0 0 0 17v-2a13 13 0 0 1 13 13c0 2.47-1.37 5.79-3.11 7.53l-2.36 2.36a4.94 4.94 0 0 0-.85 5.24l.43.84A6.1 6.1 0 0 0 11.98 47H47V11.98a8.08 8.08 0 0 1 4.13-6.66l.84-.43a6.91 6.91 0 0 1 7.56 1.22l2.36 2.36A10.06 10.06 0 0 0 68 11 11 11 0 0 0 79 0h2a13 13 0 0 1-13 13 12 12 0 0 1-7.53-3.11l-2.36-2.36a4.93 4.93 0 0 0-5.24-.85l-.84.43A6.1 6.1 0 0 0 49 11.98V47h35.02a8.08 8.08 0 0 1 6.66 4.13l.43.84a6.91 6.91 0 0 1-1.22 7.56l-2.36 2.36A10.06 10.06 0 0 0 85 68a11 11 0 0 0 22 0c0-1.94-1.16-4.75-2.53-6.11l-2.36-2.36a6.93 6.93 0 0 1-1.22-7.56l.43-.84a8.08 8.08 0 0 1 6.66-4.13H143V11.98a6.1 6.1 0 0 0-3.03-4.87l-.84-.43c-1.59-.8-4-.4-5.24.85l-2.36 2.36A12 12 0 0 1 124 13a13 13 0 0 1-13-13h2a11 11 0 0 0 11 11c1.94 0 4.75-1.16 6.11-2.53l2.36-2.36a6.93 6.93 0 0 1 7.56-1.22l.84.43a8.08 8.08 0 0 1 4.13 6.66V47h35.02a6.1 6.1 0 0 0 4.87-3.03l.43-.84c.8-1.59.4-4-.85-5.24l-2.36-2.36A12 12 0 0 1 179 28a13 13 0 0 1 13-13zM84.02 143a6.1 6.1 0 0 0 4.87-3.03l.43-.84c.8-1.59.4-4-.85-5.24l-2.36-2.36A12 12 0 0 1 83 124a13 13 0 1 1 26 0c0 2.47-1.37 5.79-3.11 7.53l-2.36 2.36a4.94 4.94 0 0 0-.85 5.24l.43.84a6.1 6.1 0 0 0 4.87 3.03H143v-35.02a8.08 8.08 0 0 1 4.13-6.66l.84-.43a6.91 6.91 0 0 1 7.56 1.22l2.36 2.36A10.06 10.06 0 0 0 164 107a11 11 0 0 0 0-22c-1.94 0-4.75 1.16-6.11 2.53l-2.36 2.36a6.93 6.93 0 0 1-7.56 1.22l-.84-.43a8.08 8.08 0 0 1-4.13-6.66V49h-35.02a6.1 6.1 0 0 0-4.87 3.03l-.43.84c-.79 1.58-.4 4 .85 5.24l2.36 2.36a12.04 12.04 0 0 1 3.11 7.51A13 13 0 1 1 83 68a12 12 0 0 1 3.11-7.53l2.36-2.36a4.93 4.93 0 0 0 .85-5.24l-.43-.84A6.1 6.1 0 0 0 84.02 49H49v35.02a8.08 8.08 0 0 1-4.13 6.66l-.84.43a6.91 6.91 0 0 1-7.56-1.22l-2.36-2.36A10.06 10.06 0 0 0 28 85a11 11 0 0 0 0 22c1.94 0 4.75-1.16 6.11-2.53l2.36-2.36a6.93 6.93 0 0 1 7.56-1.22l.84.43a8.08 8.08 0 0 1 4.13 6.66V143h35.02z'%3E%3C/path%3E%3C/svg%3E") !important; */
+  background-repeat: no-repeat, repeat !important;
+  background-size: 100% 100%, 192px 192px !important;
+}
+
+.agently-bottom-panel .agently-panel-inner {
+  width: min(960px, 100%);
+  height: 100%;
+  margin: 0 auto;
+}
+
+.agently-bottom-panel .agently-textarea {
+  min-width: unset !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.agently-bottom-panel .agently-queue-container {
+  flex: 1 1 0;
+  max-height: none !important;
+  overflow-y: auto;
+}
+
+.agently-bottom-panel-resize {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  height: 6px;
+  transform: translateY(50%);
+  cursor: row-resize;
+  z-index: 2147483647;
+  background: transparent;
+  transition: background 150ms ease;
+}
+
+.agently-bottom-panel-resize:hover,
+.agently-bottom-panel-resize.is-resizing {
+  background: var(--ag-primary, cornflowerblue);
+  opacity: 0.4;
+}
+

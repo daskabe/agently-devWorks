@@ -21,7 +21,7 @@ body {
   max-width: none;
   margin: 0 auto;
   padding: 32px;
-  background: #eef2f7;
+  background: linear-gradient(135deg, #fffbe6 0%, #fffde4 100%);
 }
 
 .page-content {
