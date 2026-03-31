@@ -12,6 +12,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
+    "onCommand:agently.openSettings",
     "onCommand:agently.openPromptPanel",
     "onCommand:agently.applyQueuedPrompt"
   ],
@@ -25,6 +26,10 @@
       {
         "command": "agently.applyQueuedPrompt",
         "title": "Agently: Apply Next Queued Prompt"
+      },
+      {
+        "command": "agently.openSettings",
+        "title": "Agently: Open Settings"
       }
     ],
     "configuration": {

@@ -1,5 +1,6 @@
 (() => {
-  const BRIDGE_URL = "http://127.0.0.1:43110/agently/prompt";
+  const DEFAULT_BRIDGE_PORT = 43110;
+  const BRIDGE_PORT_STORAGE_KEY = "agentlyBridgePort";
   const OVERLAY_ID = "agently-overlay";
   const PANEL_ID = "agently-panel";
   const PANEL_MARGIN = 8;
@@ -24,6 +25,29 @@
   let pendingRetarget = null;
   let activeHoveredElement = null;
   const INTERNAL_ELEMENT_CLASSNAMES = new Set(["agentlyActive"]);
+
+  function normalizePort(value) {
+    const port = Number.parseInt(String(value ?? ""), 10);
+    if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+      return DEFAULT_BRIDGE_PORT;
+    }
+
+    return port;
+  }
+
+  async function getBridgeUrl() {
+    if (typeof chrome === "undefined" || !chrome.storage?.local) {
+      return `http://127.0.0.1:${DEFAULT_BRIDGE_PORT}/agently/prompt`;
+    }
+
+    try {
+      const stored = await chrome.storage.local.get([BRIDGE_PORT_STORAGE_KEY]);
+      const port = normalizePort(stored[BRIDGE_PORT_STORAGE_KEY]);
+      return `http://127.0.0.1:${port}/agently/prompt`;
+    } catch {
+      return `http://127.0.0.1:${DEFAULT_BRIDGE_PORT}/agently/prompt`;
+    }
+  }
 
   function setRetargetCursor(isActive) {
     document.documentElement.classList.toggle("agently-retarget-active", isActive);
@@ -692,7 +716,8 @@
     };
 
     const sendPayload = async (payload) => {
-      const response = await fetch(BRIDGE_URL, {
+      const bridgeUrl = await getBridgeUrl();
+      const response = await fetch(bridgeUrl, {
         method: "POST",
         headers: {
           "content-type": "application/json",

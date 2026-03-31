@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agently Settings</title>
     <link rel="stylesheet" href="settings.css" />
+    <script src="settings.js" defer></script>
   </head>
   <body>
     <main class="settings-page">
@@ -14,6 +15,32 @@
         <p class="lede">
           Documentation for the current keyboard shortcuts and interaction shortcuts lives here for now.
         </p>
+      </section>
+
+      <section class="card">
+        <h2>Bridge Settings</h2>
+        <form id="bridge-settings-form" class="settings-form">
+          <label class="field">
+            <span class="field-label">Bridge port</span>
+            <input
+              id="bridge-port"
+              name="bridge-port"
+              class="field-input"
+              type="number"
+              min="1024"
+              max="65535"
+              step="1"
+              inputmode="numeric"
+            />
+          </label>
+          <p class="field-help">
+            Match this port with the VS Code Agently setting `agently.bridgePort`.
+          </p>
+          <div class="form-actions">
+            <button id="save-settings" class="primary-button" type="submit">Save</button>
+            <span id="settings-status" class="settings-status" aria-live="polite"></span>
+          </div>
+        </form>
       </section>
 
       <section class="card">
@@ -59,7 +86,7 @@
       <section class="card">
         <h2>Notes</h2>
         <p>
-          This page is intentionally simple right now. We can add real configurable extension settings here next.
+          Keep the Chrome extension bridge port aligned with the VS Code bridge port.
         </p>
       </section>
     </main>

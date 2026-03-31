@@ -9,11 +9,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const panel = new AgentlyPanel(context.extensionUri);
   const bridge = new BridgeServer();
   let isProcessing = false;
+  let port = 43110;
+  let autoOpenPanel = true;
 
-  const config = vscode.workspace.getConfiguration("agently");
-  const port = config.get<number>("bridgePort", 43110);
-  const autoOpenPanel = config.get<boolean>("autoOpenPanelOnPrompt", true);
+  const refreshConfig = (): void => {
+    const config = vscode.workspace.getConfiguration("agently");
+    port = config.get<number>("bridgePort", 43110);
+    autoOpenPanel = config.get<boolean>("autoOpenPanelOnPrompt", true);
+  };
 
+  const restartBridge = async (): Promise<void> => {
+    await bridge.stop();
+    await bridge.start(port);
+  };
+
+  refreshConfig();
   await bridge.start(port);
 
   const processNextQueuedPrompt = async (trigger: "auto" | "manual"): Promise<void> => {
@@ -81,6 +91,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   });
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("agently.openSettings", async () => {
+      await vscode.commands.executeCommand("workbench.action.openSettings", "agently");
+    })
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand("agently.openPromptPanel", () => {
       panel.show();
       panel.postQueue(queue.all());
@@ -90,6 +106,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.commands.registerCommand("agently.applyQueuedPrompt", async () => {
       await processNextQueuedPrompt("manual");
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(async (event) => {
+      const bridgePortChanged = event.affectsConfiguration("agently.bridgePort");
+      const panelSettingChanged = event.affectsConfiguration("agently.autoOpenPanelOnPrompt");
+
+      if (!bridgePortChanged && !panelSettingChanged) {
+        return;
+      }
+
+      const previousPort = port;
+      refreshConfig();
+
+      if (bridgePortChanged && port !== previousPort) {
+        try {
+          await restartBridge();
+          void vscode.window.showInformationMessage(`Agently bridge restarted on http://127.0.0.1:${port}`);
+        } catch (error) {
+          const message = toUserErrorMessage(error);
+          void vscode.window.showErrorMessage(`Agently could not restart bridge on port ${port}: ${message}`);
+        }
+      }
     })
   );
 
