@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:chrome-extension": "node scripts/build-chrome-extension.mjs",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint"
   },
