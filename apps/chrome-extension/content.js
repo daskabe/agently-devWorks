@@ -49,7 +49,9 @@
       return;
     }
 
-    indicator.textContent = label || "";
+    indicator.innerHTML = label
+      ? `<span class="agently-context-label">${escapeHtml(label)}</span><button id="agently-clear-context" class="agently-context-clear" type="button" title="Remove selected context" aria-label="Remove selected context">×</button>`
+      : "";
     indicator.classList.toggle("is-visible", Boolean(label));
   }
 
@@ -351,9 +353,11 @@
         <div class="agently-input-shell${mode === "drawer" || mode === "bottom" ? " agently-input-shell-targeted" : ""}">
           <textarea id="agently-input" class="agently-textarea${mode === "drawer" || mode === "bottom" ? " agently-textarea-targeted" : ""}" placeholder="Your prompt here..."></textarea>
           <div id="agently-hover-chip" class="agently-hover-chip"></div>
-          <div id="agently-context-indicator" class="agently-context-indicator${mode === "drawer" || mode === "bottom" ? "" : " agently-hidden"}${opts.contextAdded || selectedElement ? " is-visible" : ""}">
-            ${escapeHtml(opts.contextLabel || describeElement(selectedElement) || "")}
-          </div>
+          <div id="agently-context-indicator" class="agently-context-indicator${mode === "drawer" || mode === "bottom" ? "" : " agently-hidden"}${opts.contextAdded || selectedElement ? " is-visible" : ""}">${
+            opts.contextLabel || describeElement(selectedElement)
+              ? `<span class="agently-context-label">${escapeHtml(opts.contextLabel || describeElement(selectedElement) || "")}</span><button id="agently-clear-context" class="agently-context-clear" type="button" title="Remove selected context" aria-label="Remove selected context">×</button>`
+              : ""
+          }</div>
           <button
             id="agently-retarget"
             class="agently-input-corner-button${mode === "drawer" || mode === "bottom" ? "" : " agently-hidden"}"
@@ -521,6 +525,7 @@
     const settingsBtn = panel.querySelector("#agently-settings");
     const retargetBtn = panel.querySelector("#agently-retarget");
     const contextIndicator = panel.querySelector("#agently-context-indicator");
+    const clearContextBtn = panel.querySelector("#agently-clear-context");
     const SpeechRecognitionCtor =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -956,6 +961,15 @@
         status,
         "Click any element on the page to retarget this prompt.",
       );
+    });
+
+    clearContextBtn?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      selectedElement = null;
+      updateContextIndicator("");
+      setStatus(status, "Selected context removed.");
+      input.focus();
     });
 
     micBtn?.addEventListener("click", (event) => {

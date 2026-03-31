@@ -11,8 +11,10 @@
   z-index: 2147483646;
 }
 
-.agently-retarget-active,
-.agently-retarget-active * {
+html.agently-retarget-active,
+html.agently-retarget-active *,
+body.agently-retarget-active,
+body.agently-retarget-active * {
   cursor: cell !important;
 }
 
@@ -304,7 +306,7 @@ input[type=checkbox]:checked {
   border: 1px solid var(--ag-border-muted);
   background: var(--ag-surface-strong);
   color: var(--ag-text);
-  padding: 8px;
+  padding: 12px;
   box-sizing: border-box;
   transition:
     transform 160ms ease,
@@ -341,7 +343,7 @@ input[type=checkbox]:checked {
   line-height: 1;
   color: var(--ag-primary);
   opacity: 0;
-  pointer-events: none;
+  pointer-events: auto;
   transform: translateY(4px);
   white-space: nowrap;
   overflow: hidden;
@@ -352,10 +354,44 @@ input[type=checkbox]:checked {
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   transition:
     opacity 180ms ease,
     transform 180ms ease,
     color 180ms ease;
+}
+
+.agently-context-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agently-context-clear {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 999px;
+  padding: 0;
+  background: transparent;
+  color: #dc2626;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.agently-context-clear:hover {
+  transform: scale(1.08);
+  background: rgba(220, 38, 38, 0.12);
+  color: #ef4444;
 }
 
 .agently-context-indicator.is-visible {
