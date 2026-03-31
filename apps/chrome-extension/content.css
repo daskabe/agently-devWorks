@@ -474,6 +474,10 @@ input[type="checkbox"]:hover {
   box-shadow: var(--ag-hover-shadow);
 }
 
+input[type="checkbox"]:hover {
+  transform: scale(1.38);
+}
+
 .agently-icon-button:hover:not(:disabled),
 .agently-button:hover:not(:disabled),
 .agently-queue-save:hover,
@@ -507,6 +511,10 @@ input[type="checkbox"]:hover {
   gap: 6px;
   font-size: 12px;
   user-select: none;
+}
+
+#agently-queue-mode {
+  cursor: pointer;
 }
 
 .agently-info-chip {

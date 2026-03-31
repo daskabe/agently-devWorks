@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Agently Local Prompt Bridge",
+  "name": "Agently Local Prompt to local IDE",
   "version": "0.1.0",
-  "description": "Shift+left-click any element, send an LLM prompt + DOM context to local VS Code bridge.",
+  "description": "Send your prompt + DOM context to local IDE.",
   "permissions": ["storage"],
   "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
   "background": {
@@ -12,7 +12,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://localhost/*", 
+        "http://localhost/*",
         "http://localhost:*/*",
         "http://127.0.0.1/*",
         "http://127.0.0.1:*/*"
@@ -24,7 +24,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["assets/fonts/*", "icons/settings.svg"],
+      "resources": ["assets/fonts/*"],
       "matches": [
         "http://localhost/*",
         "http://localhost:*/*",
@@ -34,19 +34,18 @@
     }
   ],
   "icons": {
-    "48": "icons/icon-48.png"
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
   },
   "action": {
     "default_title": "Agently",
     "default_icon": {
-      "48": "icons/icon-48.png"
-    },
-    "theme_icons": [
-      {
-        "light": "icons/icon-48.png",
-        "dark": "icons/icon-48.png",
-        "size": 48
-      }
-    ]
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
   }
 }

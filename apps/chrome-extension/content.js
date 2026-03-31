@@ -128,6 +128,10 @@
     }
   }
 
+  function isBlockedTargetElement(target) {
+    return target instanceof Element && target.id === "agently-bottom-panel-resize";
+  }
+
   document.addEventListener(
     "mousemove",
     (event) => {
@@ -140,7 +144,7 @@
         document.getElementById(DRAWER_ID) ??
         document.getElementById(BOTTOM_PANEL_ID);
 
-      if (panel?.contains(event.target)) {
+      if (panel?.contains(event.target) || isBlockedTargetElement(event.target)) {
         setActiveHoveredElement(null);
         updateHoverChip("");
         return;
@@ -162,7 +166,7 @@
           document.getElementById(PANEL_ID) ??
           document.getElementById(DRAWER_ID) ??
           document.getElementById(BOTTOM_PANEL_ID);
-        if (panel?.contains(event.target)) {
+        if (panel?.contains(event.target) || isBlockedTargetElement(event.target)) {
           return;
         }
 
@@ -392,11 +396,11 @@
           </button>
         </div>
         <div class="agently-controls">
-          <label class="agently-queue-label">
+          <div class="agently-queue-label">
             <input id="agently-queue-mode" type="checkbox" />
             <span style="font-size: 14px;">Queue mode</span>
             <span class="agently-info-chip" title="Queue mode lets you add multiple prompts first, then send them together to your IDE"><sup>i</sup></span>
-          </label>
+          </div>
           <div class="agently-actions">
             <button id="agently-cancel" class="agently-button">Cancel</button>
             <button id="agently-import" class="agently-icon-button agently-hidden" title="Import prompts from JSON" aria-label="Import prompts from JSON">
