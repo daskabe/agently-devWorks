@@ -217,6 +217,21 @@
   document.addEventListener(
     "keydown",
     (event) => {
+      if (event.key === "Escape" && pendingRetarget) {
+        event.preventDefault();
+        event.stopPropagation();
+        const retargetButton = document.getElementById("agently-retarget");
+        if (retargetButton instanceof HTMLElement) {
+          retargetButton.blur();
+        }
+        pendingRetarget = null;
+        setActiveHoveredElement(null);
+        updateHoverChip("");
+        setRetargetCursor(false);
+        setStatus(activeStatusNode, "Target selection cancelled.");
+        return;
+      }
+
       if (event.key === "Escape" && activeRecognition) {
         event.preventDefault();
         event.stopPropagation();

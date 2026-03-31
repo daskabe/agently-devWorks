@@ -462,6 +462,11 @@ input[type=checkbox]:checked {
   box-shadow: var(--ag-hover-shadow);
 }
 
+.agently-input-corner-button:focus,
+.agently-input-corner-button:focus-visible {
+  outline: none;
+}
+
 .agently-icon-button:hover:not(:disabled),
 .agently-button:hover:not(:disabled),
 .agently-queue-save:hover,
@@ -491,10 +496,6 @@ input[type="checkbox"]:hover {
   outline: none;
   border-color: var(--ag-primary);
   box-shadow: 0 0 0 2px var(--ag-focus-ring);
-}
-
-.agently-input-shell:focus-within .agently-input-corner-button {
-  color: var(--ag-primary);
 }
 
 .agently-controls {
