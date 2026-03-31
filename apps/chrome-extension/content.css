@@ -1,8 +1,32 @@
+:root {
+  --ag-target-outline: rgba(22, 101, 52, 0.95);
+  --ag-target-fill: rgba(22, 101, 52, 0.12);
+  --ag-target-shadow: rgba(22, 101, 52, 0.22);
+}
+
 .agently-overlay {
   position: fixed;
   inset: 0;
   background: transparent;
   z-index: 2147483646;
+}
+
+.agently-retarget-active,
+.agently-retarget-active * {
+  cursor: cell !important;
+}
+
+.agentlyActive {
+  background: var(--ag-target-fill) !important;
+  outline: 1px double var(--ag-target-outline) !important;
+  outline-offset: 2px !important;
+  box-shadow:
+    0 0 0 1px var(--ag-target-fill),
+    0 12px 28px var(--ag-target-shadow) !important;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease,
+    outline-color 140ms ease !important;
 }
 
 .agently-panel {
@@ -26,6 +50,11 @@
   --ag-scrollbar-hover: rgba(209, 213, 219, 0.85);
   --ag-accent-glow: rgba(202, 254, 213, 0.22);
   --ag-focus-ring: rgba(202, 254, 213, 0.28);
+  --ag-hover-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+  --ag-hover-surface: rgba(255, 255, 255, 0.08);
+  --ag-target-outline: rgba(206, 229, 215, 0.95);
+  --ag-target-fill: rgba(22, 101, 52, 0.12);
+  --ag-target-shadow: rgba(22, 101, 52, 0.22);
 
   position: fixed;
   width: min(420px, calc(100vw - 16px));
@@ -44,6 +73,12 @@
 }
 
 @media (prefers-color-scheme: light) {
+  :root {
+    --ag-target-outline: rgba(22, 101, 52, 0.95);
+    --ag-target-fill: rgba(22, 101, 52, 0.12);
+    --ag-target-shadow: rgba(22, 101, 52, 0.2);
+  }
+
   .agently-panel {
     --ag-bg: #ffffff;
     --ag-surface: rgba(15, 23, 42, 0.04);
@@ -65,9 +100,17 @@
     --ag-scrollbar-hover: rgba(71, 85, 105, 0.75);
     --ag-accent-glow: rgba(17, 24, 39, 0.12);
     --ag-focus-ring: rgba(107, 114, 128, 0.24);
+    --ag-hover-shadow: 0 8px 18px rgba(21, 61, 42, 0.14);
+    --ag-hover-surface: rgba(22, 101, 52, 0.06);
   }
 }
 @media (prefers-color-scheme: dark) {
+  :root {
+    --ag-target-outline: rgba(202, 254, 213, 0.96);
+    --ag-target-fill: rgba(202, 254, 213, 0.1);
+    --ag-target-shadow: rgba(202, 254, 213, 0.24);
+  }
+
   .agently-panel {
   --ag-bg: #282828;
   --ag-surface: rgba(255, 255, 255, 0.04);
@@ -89,6 +132,8 @@
   --ag-scrollbar-hover: rgba(209, 213, 219, 0.85);
   --ag-accent-glow: rgba(202, 254, 213, 0.42);
   --ag-focus-ring: rgba(202, 254, 213, 0.32);
+  --ag-hover-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+  --ag-hover-surface: rgba(202, 254, 213, 0.08);
   }
 }
 
@@ -106,6 +151,10 @@ input[type=checkbox]
   outline: 0.5px solid var(--ag-border);
   outline-offset: 0;
   box-shadow: inset 0 0 0 0.5px var(--ag-border);
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    outline-color 180ms ease;
 }
 
 input[type=checkbox]:checked {
@@ -203,12 +252,12 @@ input[type=checkbox]:checked {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-}
-
-.agently-icon-button img {
-  width: 16px;
-  height: 16px;
-  display: block;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
 }
 
 .agently-icon-button.is-active {
@@ -257,6 +306,144 @@ input[type=checkbox]:checked {
   color: var(--ag-text);
   padding: 8px;
   box-sizing: border-box;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.agently-input-shell {
+  position: relative;
+}
+
+.agently-input-shell-targeted {
+  margin-top: 6px;
+  --ag-input-bottom-inset: 14px;
+  --ag-input-control-height: 30px;
+}
+
+.agently-textarea-targeted {
+  min-height: 136px;
+  padding-right: 48px;
+  padding-bottom: 40px;
+  border-radius: 18px;
+}
+
+.agently-context-indicator {
+  position: absolute;
+  right: 48px;
+  bottom: var(--ag-input-bottom-inset);
+  max-width: calc(100% - 140px);
+  min-height: var(--ag-input-control-height);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ag-primary);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: color-mix(in srgb, var(--ag-border-muted) 20%, transparent);
+  border: 1px solid var(--ag-border-muted);
+  padding: 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.agently-context-indicator.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.agently-hover-chip {
+  position: absolute;
+  left: 14px;
+  bottom: var(--ag-input-bottom-inset);
+  max-width: calc(100% - 140px);
+  min-height: var(--ag-input-control-height);
+  padding: 6px 10px;
+  border: 1px solid var(--ag-primary);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ag-surface-strong) 92%, transparent);
+  color: var(--ag-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  display: inline-flex;
+  align-items: center;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.agently-hover-chip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.agently-input-corner-button {
+  position: absolute;
+  right: 14px;
+  bottom: var(--ag-input-bottom-inset);
+  width: var(--ag-input-control-height);
+  height: var(--ag-input-control-height);
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ag-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.agently-input-corner-button:hover {
+  color: var(--ag-text);
+  background: var(--ag-hover-surface);
+  transform: scale(1.05);
+  box-shadow: var(--ag-hover-shadow);
+}
+
+.agently-icon-button:hover:not(:disabled),
+.agently-button:hover:not(:disabled),
+.agently-queue-save:hover,
+.agently-queue-remove:hover,
+.agently-info-chip:hover,
+.agently-textarea:hover,
+.agently-queue-edit:hover,
+input[type="checkbox"]:hover {
+  transform: scale(1.02);
+  box-shadow: var(--ag-hover-shadow);
+}
+
+.agently-icon-button:hover:not(:disabled),
+.agently-button:hover:not(:disabled),
+.agently-queue-save:hover,
+.agently-queue-remove:hover,
+.agently-info-chip:hover {
+  background: var(--ag-hover-surface);
 }
 
 .agently-textarea:focus,
@@ -264,6 +451,10 @@ input[type=checkbox]:checked {
   outline: none;
   border-color: var(--ag-primary);
   box-shadow: 0 0 0 2px var(--ag-focus-ring);
+}
+
+.agently-input-shell:focus-within .agently-input-corner-button {
+  color: var(--ag-primary);
 }
 
 .agently-controls {
@@ -293,6 +484,11 @@ input[type=checkbox]:checked {
   justify-content: center;
   font-size: 10px;
   cursor: help;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    opacity 180ms ease;
 }
 
 .agently-actions {
@@ -305,9 +501,16 @@ input[type=checkbox]:checked {
 .agently-button {
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid var(--ag-border-muted);
-  background: transparent;
-  color: var(--ag-text);
+  border: 1px solid var(--ag-border);
+  background: color-mix(in srgb, var(--ag-surface-strong) 72%, transparent);
+  color: var(--ag-text-muted);
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
 }
 
 .agently-button:disabled {
@@ -324,6 +527,12 @@ input[type=checkbox]:checked {
   background: var(--ag-primary);
   color: var(--ag-primary-text);
   cursor: pointer;
+}
+
+.agently-button-primary:hover:not(:disabled) {
+  border-color: var(--ag-primary);
+  background: color-mix(in srgb, var(--ag-primary) 92%, white);
+  color: var(--ag-primary-text);
 }
 
 .agently-button-secondary {
@@ -389,7 +598,11 @@ padding-left: 12px;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 120ms ease;
+  transition:
+    opacity 120ms ease,
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
   flex: 0 0 auto;
 }
 
@@ -420,6 +633,11 @@ padding-left: 12px;
   padding: 6px 8px;
   box-sizing: border-box;
   resize: vertical;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
 }
 
 .agently-queue-save {
@@ -435,6 +653,11 @@ padding-left: 12px;
   cursor: pointer;
   margin-left: auto;
   flex: 0 0 auto;
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
 }
 
 .agently-header-actions {
@@ -571,4 +794,3 @@ color-mix(in srgb, var(--ag-bg) 55%, transparent) 85%,
   background: var(--ag-primary, cornflowerblue);
   opacity: 0.4;
 }
-

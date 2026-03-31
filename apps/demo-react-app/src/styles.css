@@ -1,7 +1,42 @@
+
 :root {
+  color-scheme: light dark;
+  --app-bg: #d6d9de;
+  --app-bg-deep: #b8bec6;
+  --app-glow: rgba(255, 255, 255, 0.38);
+  --app-shadow: rgba(52, 60, 72, 0.14);
+  --text-primary: #202531;
+  --text-secondary: #4f6073;
+  --text-muted: #667086;
+  --text-accent: #2b5f8d;
+  --heading-strong: #1f3149;
+  --surface-card: rgba(255, 255, 255, 0.88);
+  --surface-card-strong: #fdfdff;
+  --surface-border: rgba(132, 141, 157, 0.3);
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  color: #202531;
-  background: #f2f5f8;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at top left, var(--app-glow), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(160deg, var(--app-bg) 0%, var(--app-bg-deep) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg: #1b1d21;
+    --app-bg-deep: #2d3138;
+    --app-glow: rgba(255, 255, 255, 0.04);
+    --app-shadow: rgba(0, 0, 0, 0.35);
+    --text-primary: #eef1f4;
+    --text-secondary: #b7c0ca;
+    --text-muted: #95a0ad;
+    --text-accent: #9fc3e6;
+    --heading-strong: #f3f6f9;
+    --surface-card: rgba(35, 39, 46, 0.82);
+    --surface-card-strong: rgba(43, 48, 57, 0.92);
+    --surface-border: rgba(179, 190, 205, 0.16);
+    color: var(--text-primary);
+  }
 }
 
 * {
@@ -10,6 +45,12 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at top left, var(--app-glow), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(160deg, var(--app-bg) 0%, var(--app-bg-deep) 100%);
 }
 
 .page {
@@ -21,7 +62,7 @@ body {
   max-width: none;
   margin: 0 auto;
   padding: 32px;
-  background: linear-gradient(135deg, #fffbe6 0%, #fffde4 100%);
+  background: transparent;
 }
 
 .page-content {
@@ -52,15 +93,15 @@ body {
   padding: 9px 14px;
   border-radius: 10px;
   text-decoration: none;
-  color: #25405d;
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 14px;
   letter-spacing: 0.02em;
 }
 
 .nav-link.active {
-  color: #0f2942;
-  background: #e4f3ff;
+  color: var(--heading-strong);
+  background: color-mix(in srgb, var(--surface-card-strong) 82%, white);
 }
 
 .header {
@@ -73,28 +114,30 @@ body {
 
 .header p {
   margin: 0;
-  color: #4f6073;
+  color: var(--text-secondary);
 }
 
 .status {
   margin-top: 8px;
   font-size: 14px;
-  color: #2b5f8d;
+  color: var(--text-accent);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
   gap: 20px;
+  padding: 20px;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #dcdce5;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
   border-radius: 18px;
   padding: 18px;
   box-shadow: 0 8px 22px rgba(19, 17, 33, 0.08);
   cursor: pointer;
+  color: var(--text-primary);
 }
 
 .card:hover {
@@ -116,21 +159,22 @@ body {
 
 .card p {
   margin: 0 0 14px;
-  color: #4e5564;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
 .item {
   width: 100%;
-  border: 1px solid #e3e5ec;
+  border: 1px solid var(--surface-border);
   border-radius: 12px;
-  background: #fdfdff;
+  background: var(--surface-card-strong);
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px;
   text-align: left;
   cursor: pointer;
+  color: var(--text-primary);
 }
 
 .item .bar {
@@ -145,12 +189,12 @@ body {
 }
 
 .item small {
-  color: #667086;
+  color: var(--text-muted);
 }
 
 .item span:last-child {
   margin-left: auto;
-  color: #7a8294;
+  color: var(--text-muted);
   font-size: 22px;
 }
 
@@ -179,7 +223,7 @@ body {
 .agent-column-head h2 {
   margin: 0;
   font-size: 22px;
-  color: #1f3149;
+  color: var(--heading-strong);
 }
 
 .agent-name-button {
@@ -198,7 +242,7 @@ body {
 
 .agent-column-head span {
   font-size: 12px;
-  color: #5f7389;
+  color: var(--text-secondary);
 }
 
 .agent-tasks {
@@ -209,7 +253,7 @@ body {
 .task-card h3 {
   margin: 0 0 8px;
   font-size: 22px;
-  color: #1f3149;
+  color: var(--heading-strong);
 }
 
 .task-item {

@@ -9,7 +9,6 @@
   const BOTTOM_PANEL_RESIZE_ID = "agently-bottom-panel-resize";
   const BRAND_FONT_STYLE_ID = "agently-brand-font-style";
   const BRAND_FONT_FILE = "assets/fonts/MoiraiOne-Regular.ttf";
-  const SETTINGS_ICON_FILE = "icons/settings.svg";
 
   let anchor = { x: 16, y: 16 };
   let selectedElement = null;
@@ -22,15 +21,153 @@
   let drawerWidth = 420;
   let bottomPanelHeight = 300;
   let panelMode = "popup";
+  let pendingRetarget = null;
+  let activeHoveredElement = null;
+  const INTERNAL_ELEMENT_CLASSNAMES = new Set(["agentlyActive"]);
+
+  function setRetargetCursor(isActive) {
+    document.documentElement.classList.toggle("agently-retarget-active", isActive);
+    if (document.body) {
+      document.body.classList.toggle("agently-retarget-active", isActive);
+    }
+  }
+
+  function updateHoverChip(label) {
+    const chip = document.getElementById("agently-hover-chip");
+    if (!chip) {
+      return;
+    }
+
+    chip.textContent = label || "";
+    chip.classList.remove("agently-hidden");
+    chip.classList.toggle("is-visible", Boolean(label));
+  }
+
+  function updateContextIndicator(label) {
+    const indicator = document.getElementById("agently-context-indicator");
+    if (!indicator) {
+      return;
+    }
+
+    indicator.textContent = label || "";
+    indicator.classList.toggle("is-visible", Boolean(label));
+  }
+
+  function describeElement(element) {
+    if (!(element instanceof Element)) {
+      return "";
+    }
+
+    if (element.id) {
+      return `#${element.id}`;
+    }
+
+    const firstClass = Array.from(element.classList).find(
+      (className) => className && !INTERNAL_ELEMENT_CLASSNAMES.has(className),
+    );
+    if (firstClass) {
+      return `.${firstClass}`;
+    }
+
+    return `<${element.tagName.toLowerCase()}>`;
+  }
+
+  function getCleanElementClone(element) {
+    if (!(element instanceof Element)) {
+      return null;
+    }
+
+    const clone = element.cloneNode(true);
+    if (!(clone instanceof Element)) {
+      return null;
+    }
+
+    clone.classList.remove(...INTERNAL_ELEMENT_CLASSNAMES);
+    return clone;
+  }
+
+  function setActiveHoveredElement(element) {
+    if (activeHoveredElement === element) {
+      return;
+    }
+
+    if (activeHoveredElement instanceof Element) {
+      activeHoveredElement.classList.remove("agentlyActive");
+    }
+
+    activeHoveredElement = element instanceof Element ? element : null;
+
+    if (activeHoveredElement) {
+      activeHoveredElement.classList.add("agentlyActive");
+    }
+  }
+
+  document.addEventListener(
+    "mousemove",
+    (event) => {
+      if (!pendingRetarget) {
+        return;
+      }
+
+      const panel =
+        document.getElementById(PANEL_ID) ??
+        document.getElementById(DRAWER_ID) ??
+        document.getElementById(BOTTOM_PANEL_ID);
+
+      if (panel?.contains(event.target)) {
+        setActiveHoveredElement(null);
+        updateHoverChip("");
+        return;
+      }
+
+      setActiveHoveredElement(event.target instanceof Element ? event.target : null);
+      updateHoverChip(
+        event.target instanceof Element ? describeElement(event.target) : "",
+      );
+    },
+    true,
+  );
 
   document.addEventListener(
     "mousedown",
     (event) => {
+      if (pendingRetarget && event.button === 0) {
+        const panel =
+          document.getElementById(PANEL_ID) ??
+          document.getElementById(DRAWER_ID) ??
+          document.getElementById(BOTTOM_PANEL_ID);
+        if (panel?.contains(event.target)) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const nextMode = pendingRetarget.mode;
+        const nextValue = pendingRetarget.inputValue;
+
+        anchor = { x: event.clientX, y: event.clientY };
+        selectedElement = event.target instanceof Element ? event.target : null;
+        const selectedLabel = describeElement(selectedElement);
+        setActiveHoveredElement(null);
+        pendingRetarget = null;
+        setRetargetCursor(false);
+
+        removePanel();
+        showPanel(nextMode, {
+          initialValue: nextValue,
+          contextAdded: true,
+          contextLabel: selectedLabel,
+        });
+        return;
+      }
+
       if (!event.shiftKey || event.button !== 0) {
         return;
       }
 
-      const existingPanel = document.getElementById(PANEL_ID) ?? document.getElementById(DRAWER_ID);
+      const existingPanel =
+        document.getElementById(PANEL_ID) ?? document.getElementById(DRAWER_ID);
       if (existingPanel?.contains(event.target)) {
         return;
       }
@@ -44,7 +181,7 @@
       removePanel();
       showPanel();
     },
-    true
+    true,
   );
 
   document.addEventListener(
@@ -57,7 +194,10 @@
         return;
       }
 
-      if (event.key !== "Escape" || (panelMode !== "drawer" && panelMode !== "bottom")) {
+      if (
+        event.key !== "Escape" ||
+        (panelMode !== "drawer" && panelMode !== "bottom")
+      ) {
         return;
       }
 
@@ -65,7 +205,7 @@
       event.stopPropagation();
       removePanel();
     },
-    true
+    true,
   );
 
   if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
@@ -76,7 +216,7 @@
 
       anchor = {
         x: Math.max(16, Math.floor(window.innerWidth / 2)),
-        y: Math.max(16, window.innerHeight - 16)
+        y: Math.max(16, window.innerHeight - 16),
       };
       selectedElement = null;
 
@@ -123,9 +263,10 @@
       return;
     }
 
-    const fontUrl = typeof chrome !== "undefined" && chrome.runtime?.getURL
-      ? chrome.runtime.getURL(BRAND_FONT_FILE)
-      : BRAND_FONT_FILE;
+    const fontUrl =
+      typeof chrome !== "undefined" && chrome.runtime?.getURL
+        ? chrome.runtime.getURL(BRAND_FONT_FILE)
+        : BRAND_FONT_FILE;
 
     const style = document.createElement("style");
     style.id = BRAND_FONT_STYLE_ID;
@@ -140,14 +281,6 @@
     `;
 
     (document.head || document.documentElement).appendChild(style);
-  }
-
-  function getExtensionAssetUrl(path) {
-    if (typeof chrome !== "undefined" && chrome.runtime?.getURL) {
-      return chrome.runtime.getURL(path);
-    }
-
-    return path;
   }
 
   function showPanel(mode, opts) {
@@ -168,7 +301,10 @@
     } else if (mode === "bottom") {
       panel.id = BOTTOM_PANEL_ID;
       panel.className = "agently-panel agently-bottom-panel";
-      bottomPanelHeight = Math.min(bottomPanelHeight, Math.max(150, Math.floor(window.innerHeight * 0.5)));
+      bottomPanelHeight = Math.min(
+        bottomPanelHeight,
+        Math.max(150, Math.floor(window.innerHeight * 0.5)),
+      );
       panel.style.height = `${bottomPanelHeight}px`;
     } else {
       panel.id = PANEL_ID;
@@ -197,9 +333,6 @@
                 <path d="M3 15h18"></path>
               </svg>
             </button>
-            <button id="agently-settings" class="agently-icon-button" title="Open settings" aria-label="Open settings">
-              <img src="${getExtensionAssetUrl(SETTINGS_ICON_FILE)}" alt="" />
-            </button>
             <button id="agently-mic" class="agently-icon-button" title="Voice input" aria-label="Voice input">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                 <path d="M12 19v3"></path>
@@ -207,9 +340,29 @@
                 <rect x="9" y="2" width="6" height="13" rx="3"></rect>
               </svg>
             </button>
+            <button id="agently-settings" class="agently-icon-button" title="Open settings" aria-label="Open settings">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
           </div>
         </div>
-        <textarea id="agently-input" class="agently-textarea" placeholder="Your prompt here..."></textarea>
+        <div class="agently-input-shell${mode === "drawer" || mode === "bottom" ? " agently-input-shell-targeted" : ""}">
+          <textarea id="agently-input" class="agently-textarea${mode === "drawer" || mode === "bottom" ? " agently-textarea-targeted" : ""}" placeholder="Your prompt here..."></textarea>
+          <div id="agently-hover-chip" class="agently-hover-chip"></div>
+          <div id="agently-context-indicator" class="agently-context-indicator${mode === "drawer" || mode === "bottom" ? "" : " agently-hidden"}${opts.contextAdded || selectedElement ? " is-visible" : ""}">
+            ${escapeHtml(opts.contextLabel || describeElement(selectedElement) || "")}
+          </div>
+          <button
+            id="agently-retarget"
+            class="agently-input-corner-button${mode === "drawer" || mode === "bottom" ? "" : " agently-hidden"}"
+            title="Select a new target element"
+            aria-label="Select a new target element"
+          >
+ <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crosshair-icon lucide-crosshair"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
+          </button>
+        </div>
         <div class="agently-controls">
           <label class="agently-queue-label">
             <input id="agently-queue-mode" type="checkbox" />
@@ -257,7 +410,10 @@
           return;
         }
         const delta = resizeStartX - e.clientX;
-        const newWidth = Math.max(280, Math.min(window.innerWidth - 40, resizeStartWidth + delta));
+        const newWidth = Math.max(
+          280,
+          Math.min(window.innerWidth - 40, resizeStartWidth + delta),
+        );
         drawerWidth = newWidth;
         panel.style.width = `${newWidth}px`;
         resizeHandle.style.right = `${newWidth}px`;
@@ -306,7 +462,10 @@
         }
         const delta = resizeStartY - e.clientY;
         const maxHeight = Math.max(150, Math.floor(window.innerHeight * 0.5));
-        const newHeight = Math.max(150, Math.min(maxHeight, resizeStartHeight + delta));
+        const newHeight = Math.max(
+          150,
+          Math.min(maxHeight, resizeStartHeight + delta),
+        );
         bottomPanelHeight = newHeight;
         panel.style.height = `${newHeight}px`;
         syncBottomResizeHandle(newHeight);
@@ -332,8 +491,14 @@
 
       requestAnimationFrame(() => {
         const panelRect = panel.getBoundingClientRect();
-        const maxLeft = Math.max(PANEL_MARGIN, window.innerWidth - panelRect.width - PANEL_MARGIN);
-        const maxTop = Math.max(PANEL_MARGIN, window.innerHeight - panelRect.height - PANEL_MARGIN);
+        const maxLeft = Math.max(
+          PANEL_MARGIN,
+          window.innerWidth - panelRect.width - PANEL_MARGIN,
+        );
+        const maxTop = Math.max(
+          PANEL_MARGIN,
+          window.innerHeight - panelRect.height - PANEL_MARGIN,
+        );
         const nextLeft = Math.min(Math.max(PANEL_MARGIN, anchor.x), maxLeft);
         const nextTop = Math.min(Math.max(PANEL_MARGIN, anchor.y), maxTop);
 
@@ -354,7 +519,10 @@
     const maximizeBtn = panel.querySelector("#agently-maximize");
     const bottomPanelBtn = panel.querySelector("#agently-open-bottom");
     const settingsBtn = panel.querySelector("#agently-settings");
-    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const retargetBtn = panel.querySelector("#agently-retarget");
+    const contextIndicator = panel.querySelector("#agently-context-indicator");
+    const SpeechRecognitionCtor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!(input instanceof HTMLTextAreaElement)) {
       return;
@@ -428,17 +596,24 @@
           </div>
         `;
 
-        const editNode = queueList.querySelector(`[data-queue-edit-input-index="${editingQueueIndex}"]`);
+        const editNode = queueList.querySelector(
+          `[data-queue-edit-input-index="${editingQueueIndex}"]`,
+        );
         if (editNode instanceof HTMLTextAreaElement) {
           editNode.focus();
-          editNode.setSelectionRange(editNode.value.length, editNode.value.length);
+          editNode.setSelectionRange(
+            editNode.value.length,
+            editNode.value.length,
+          );
         }
         return;
       }
 
       queueList.innerHTML = `
         <div class="agently-queue-list">
-          ${queuedPrompts.map((item, index) => `
+          ${queuedPrompts
+            .map(
+              (item, index) => `
             <div class="agently-queue-row">
               <div class="agently-queue-text" data-queue-edit-index="${index}" title="Double-click to edit">${escapeHtml(truncatePreview(item.text, 300))}</div>
               <button class="agently-queue-remove" data-queue-remove-index="${index}" aria-label="Remove queued prompt" title="Remove from queue">
@@ -448,7 +623,9 @@
                 </svg>
               </button>
             </div>
-          `).join("")}
+          `,
+            )
+            .join("")}
         </div>
       `;
     };
@@ -470,15 +647,27 @@
       recognition.continuous = true;
 
       setMicActiveState(true);
-      setStatus(status, source === "mouse" ? "Listening... click mic again or press Escape to stop." : "Listening... press Escape to stop.");
+      setStatus(
+        status,
+        source === "mouse"
+          ? "Listening... click mic again or press Escape to stop."
+          : "Listening... press Escape to stop.",
+      );
 
       recognition.onresult = (event) => {
         let transcript = "";
-        for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        for (
+          let index = event.resultIndex;
+          index < event.results.length;
+          index += 1
+        ) {
           transcript += event.results[index][0].transcript;
         }
 
-        input.value = [input.value.trim(), transcript.trim()].filter(Boolean).join(" ").trimStart();
+        input.value = [input.value.trim(), transcript.trim()]
+          .filter(Boolean)
+          .join(" ")
+          .trimStart();
         updateQueueControls();
       };
 
@@ -501,13 +690,15 @@
       const response = await fetch(BRIDGE_URL, {
         method: "POST",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`Bridge error (${response.status}). Is VS Code extension running?`);
+        throw new Error(
+          `Bridge error (${response.status}). Is VS Code extension running?`,
+        );
       }
     };
 
@@ -520,7 +711,7 @@
       return {
         text,
         source: "chrome-extension",
-        context: buildContext(selectedElement)
+        context: buildContext(selectedElement),
       };
     };
 
@@ -550,7 +741,10 @@
       }
 
       input.value = "";
-      setStatus(status, `Added to queue. ${queuedPrompts.length} prompt(s) queued.`);
+      setStatus(
+        status,
+        `Added to queue. ${queuedPrompts.length} prompt(s) queued.`,
+      );
       updateQueueControls();
       renderQueueList();
       input.focus();
@@ -577,7 +771,10 @@
               : null;
 
           if (!items) {
-            setStatus(status, "Invalid JSON format. Expected { \"queueItems\": [\"prompt1\"] }.");
+            setStatus(
+              status,
+              'Invalid JSON format. Expected { "queueItems": ["prompt1"] }.',
+            );
             return;
           }
 
@@ -588,7 +785,7 @@
             .map((text) => ({
               text,
               source: "chrome-extension",
-              context: buildContext(selectedElement)
+              context: buildContext(selectedElement),
             }));
 
           if (importedPayloads.length === 0) {
@@ -604,12 +801,18 @@
             queueMode.checked = true;
           }
 
-          setStatus(status, `Imported ${importedPayloads.length} prompt(s). ${queuedPrompts.length} prompt(s) queued.`);
+          setStatus(
+            status,
+            `Imported ${importedPayloads.length} prompt(s). ${queuedPrompts.length} prompt(s) queued.`,
+          );
           updateQueueControls();
           renderQueueList();
           input.focus();
         } catch {
-          setStatus(status, "Could not import queue. Check that the file is valid JSON.");
+          setStatus(
+            status,
+            "Could not import queue. Check that the file is valid JSON.",
+          );
         }
       });
 
@@ -625,11 +828,17 @@
       const saveTarget = source.closest("[data-queue-save-index]");
       if (saveTarget) {
         const index = Number(saveTarget.getAttribute("data-queue-save-index"));
-        if (!Number.isInteger(index) || index < 0 || index >= queuedPrompts.length) {
+        if (
+          !Number.isInteger(index) ||
+          index < 0 ||
+          index >= queuedPrompts.length
+        ) {
           return;
         }
 
-        const editInput = queueList.querySelector(`[data-queue-edit-input-index="${index}"]`);
+        const editInput = queueList.querySelector(
+          `[data-queue-edit-input-index="${index}"]`,
+        );
         if (!(editInput instanceof HTMLTextAreaElement)) {
           return;
         }
@@ -652,8 +861,14 @@
         return;
       }
 
-      const index = Number(removeTarget.getAttribute("data-queue-remove-index"));
-      if (!Number.isInteger(index) || index < 0 || index >= queuedPrompts.length) {
+      const index = Number(
+        removeTarget.getAttribute("data-queue-remove-index"),
+      );
+      if (
+        !Number.isInteger(index) ||
+        index < 0 ||
+        index >= queuedPrompts.length
+      ) {
         return;
       }
 
@@ -666,7 +881,12 @@
         }
       }
 
-      setStatus(status, queuedPrompts.length > 0 ? `${queuedPrompts.length} prompt(s) queued.` : "Queue is empty.");
+      setStatus(
+        status,
+        queuedPrompts.length > 0
+          ? `${queuedPrompts.length} prompt(s) queued.`
+          : "Queue is empty.",
+      );
       updateQueueControls();
       renderQueueList();
     });
@@ -683,7 +903,11 @@
       }
 
       const index = Number(editTarget.getAttribute("data-queue-edit-index"));
-      if (!Number.isInteger(index) || index < 0 || index >= queuedPrompts.length) {
+      if (
+        !Number.isInteger(index) ||
+        index < 0 ||
+        index >= queuedPrompts.length
+      ) {
         return;
       }
 
@@ -692,26 +916,46 @@
     });
 
     maximizeBtn?.addEventListener("click", () => {
-      const currentValue = input instanceof HTMLTextAreaElement ? input.value : "";
+      const currentValue =
+        input instanceof HTMLTextAreaElement ? input.value : "";
       removePanel();
       showPanel("drawer", { initialValue: currentValue });
     });
 
     bottomPanelBtn?.addEventListener("click", () => {
-      const currentValue = input instanceof HTMLTextAreaElement ? input.value : "";
+      const currentValue =
+        input instanceof HTMLTextAreaElement ? input.value : "";
       removePanel();
       showPanel("bottom", { initialValue: currentValue });
     });
 
     settingsBtn?.addEventListener("click", async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: "agently.openSettingsPage" });
+        const response = await chrome.runtime.sendMessage({
+          type: "agently.openSettingsPage",
+        });
         if (!response?.ok) {
-          throw new Error(response?.error || "Could not open the settings page.");
+          throw new Error(
+            response?.error || "Could not open the settings page.",
+          );
         }
       } catch {
         setStatus(status, "Could not open the settings page.");
       }
+    });
+
+    retargetBtn?.addEventListener("click", () => {
+      pendingRetarget = {
+        mode,
+        inputValue: input.value,
+      };
+      setRetargetCursor(true);
+      updateHoverChip("");
+
+      setStatus(
+        status,
+        "Click any element on the page to retarget this prompt.",
+      );
     });
 
     micBtn?.addEventListener("click", (event) => {
@@ -734,7 +978,8 @@
       }
 
       if (event.key === "Enter" && !event.shiftKey) {
-        const isQueueMode = queueMode instanceof HTMLInputElement && queueMode.checked;
+        const isQueueMode =
+          queueMode instanceof HTMLInputElement && queueMode.checked;
         if (isQueueMode) {
           event.preventDefault();
           const payload = getCurrentPayload();
@@ -745,7 +990,10 @@
           queuedPrompts.push(payload);
           editingQueueIndex = null;
           input.value = "";
-          setStatus(status, `Added to queue. ${queuedPrompts.length} prompt(s) queued.`);
+          setStatus(
+            status,
+            `Added to queue. ${queuedPrompts.length} prompt(s) queued.`,
+          );
           updateQueueControls();
           renderQueueList();
           input.focus();
@@ -766,7 +1014,11 @@
         queuedPrompts.push(currentPayload);
       }
 
-      const toSend = hasQueuedItems ? [...queuedPrompts] : currentPayload ? [currentPayload] : [];
+      const toSend = hasQueuedItems
+        ? [...queuedPrompts]
+        : currentPayload
+          ? [currentPayload]
+          : [];
       if (toSend.length === 0) {
         setStatus(status, "Nothing to send.");
         return;
@@ -793,9 +1045,10 @@
         renderQueueList();
         setTimeout(removePanel, 1200);
       } catch (error) {
-        const message = error instanceof Error
-          ? error.message
-          : "Cannot reach local bridge. Start VS Code Agently extension first.";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Cannot reach local bridge. Start VS Code Agently extension first.";
         setStatus(status, message);
       }
     });
@@ -811,13 +1064,17 @@
   }
 
   function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (ch) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[ch]));
+    return String(value).replace(
+      /[&<>"']/g,
+      (ch) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[ch],
+    );
   }
 
   function truncatePreview(text, maxChars) {
@@ -833,6 +1090,11 @@
     if (activeRecognition) {
       stopActiveRecognition();
     }
+
+    setRetargetCursor(false);
+    updateHoverChip("");
+    setActiveHoveredElement(null);
+    pendingRetarget = null;
 
     const drawer = document.getElementById(DRAWER_ID);
     if (drawer?._cleanupResize) {
@@ -860,10 +1122,13 @@
       return { pageUrl: location.href };
     }
 
+    const cleanElement = getCleanElementClone(element);
+    const htmlSnippetSource = cleanElement ?? element;
+
     return {
       pageUrl: location.href,
       selector: buildSelector(element),
-      htmlSnippet: element.outerHTML?.slice(0, 1200)
+      htmlSnippet: htmlSnippetSource.outerHTML?.slice(0, 1200),
     };
   }
 
@@ -882,12 +1147,20 @@
     while (current && current.nodeType === 1 && parts.length < 4) {
       let part = current.tagName.toLowerCase();
       if (current.classList.length > 0) {
-        part += `.${Array.from(current.classList).slice(0, 2).map(cssEscape).join(".")}`;
+        const publicClassNames = Array.from(current.classList)
+          .filter((className) => !INTERNAL_ELEMENT_CLASSNAMES.has(className))
+          .slice(0, 2);
+
+        if (publicClassNames.length > 0) {
+          part += `.${publicClassNames.map(cssEscape).join(".")}`;
+        }
       }
 
       const parent = current.parentElement;
       if (parent) {
-        const siblings = Array.from(parent.children).filter((child) => child.tagName === current.tagName);
+        const siblings = Array.from(parent.children).filter(
+          (child) => child.tagName === current.tagName,
+        );
         if (siblings.length > 1) {
           const index = siblings.indexOf(current) + 1;
           part += `:nth-of-type(${index})`;
