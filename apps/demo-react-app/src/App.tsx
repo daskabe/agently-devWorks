@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { createBridgeClient, VscodeTransport, WindowTransport } from "@agently/bridge";
+import { useEffect, useState } from "react";
+
+const BRIDGE_URL = "http://127.0.0.1:43110/agently/prompt";
 
 type Card = {
   id: string;
@@ -64,15 +65,6 @@ const cards: Card[] = [
 export default function App() {
   const [status, setStatus] = useState("Ready");
 
-  const client = useMemo(
-    () =>
-      createBridgeClient([
-        new VscodeTransport(),
-        new WindowTransport()
-      ]),
-    []
-  );
-
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
       if (!e.shiftKey || e.button !== 0) return;
@@ -85,18 +77,18 @@ export default function App() {
       const cardId = cardElement.getAttribute("data-card");
       const card = cards.find((c) => c.id === cardId);
       if (card) {
-        sendPrompt(card);
+        void sendPrompt(card);
       }
     };
 
     window.addEventListener("mousedown", handleMouseDown, true);
     return () => window.removeEventListener("mousedown", handleMouseDown, true);
-  }, [client]);
+  }, []);
 
-  const sendPrompt = (card: Card) => {
+  const sendPrompt = async (card: Card) => {
     const text = `Improve the ${card.title} section with better hierarchy.`;
 
-    client.notify("prompt.send", {
+    const payload = {
       text,
       source: "demo-react-app",
       context: {
@@ -104,9 +96,25 @@ export default function App() {
         pageUrl: window.location.href,
         cardTitle: card.title
       }
-    });
+    };
 
-    setStatus(`Sent prompt for ${card.title}`);
+    try {
+      const response = await fetch(BRIDGE_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bridge error (${response.status})`);
+      }
+
+      setStatus(`Sent prompt for ${card.title}`);
+    } catch {
+      setStatus("Could not reach VS Code bridge on port 43110");
+    }
   };
 
   return (
@@ -123,7 +131,7 @@ export default function App() {
             <div className="icon" style={{ borderColor: card.accent }} />
             <h2>{card.title}</h2>
             <p>{card.description}</p>
-            <button className="item" onClick={() => sendPrompt(card)}>
+            <button className="item" onClick={() => void sendPrompt(card)}>
               <span className="bar" style={{ backgroundColor: card.accent }} />
               <span>
                 <strong>{card.item}</strong>
