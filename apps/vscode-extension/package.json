@@ -46,6 +46,11 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically open/focus the Agently panel when a prompt arrives from the local bridge."
+        },
+        "agently.showNotifications": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show VS Code information notifications for Agently events (e.g. prompt received, bridge started)."
         }
       }
     }

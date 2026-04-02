@@ -11,11 +11,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   let isProcessing = false;
   let port = 43110;
   let autoOpenPanel = true;
+  let showNotifications = false;
 
   const refreshConfig = (): void => {
     const config = vscode.workspace.getConfiguration("agently");
     port = config.get<number>("bridgePort", 43110);
     autoOpenPanel = config.get<boolean>("autoOpenPanelOnPrompt", true);
+    showNotifications = config.get<boolean>("showNotifications", false);
+  };
+
+  const notify = (message: string): void => {
+    if (showNotifications) {
+      void vscode.window.showInformationMessage(message);
+    }
   };
 
   const restartBridge = async (): Promise<void> => {
@@ -53,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
       panel.postInfo("Prompt sent to Copilot Chat.");
       panel.postQueue(queue.all());
-      void vscode.window.showInformationMessage("Prompt added to Copilot Chat.");
+      notify("Prompt added to Copilot Chat.");
     } catch (error) {
       queue.prepend(next);
       panel.postQueue(queue.all());
@@ -77,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     panel.postInfo(`Prompt queued at ${new Date(item.receivedAt).toLocaleTimeString()}`);
     panel.postQueue(queue.all());
 
-    void vscode.window.showInformationMessage(`Agently prompt received: ${payload.text}`);
+    notify(`Agently prompt received: ${payload.text}`);
 
     if (wasEmpty) {
       void processNextQueuedPrompt("auto");
@@ -113,8 +121,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       const bridgePortChanged = event.affectsConfiguration("agently.bridgePort");
       const panelSettingChanged = event.affectsConfiguration("agently.autoOpenPanelOnPrompt");
+      const notificationsSettingChanged = event.affectsConfiguration("agently.showNotifications");
 
-      if (!bridgePortChanged && !panelSettingChanged) {
+      if (!bridgePortChanged && !panelSettingChanged && !notificationsSettingChanged) {
         return;
       }
 
@@ -124,7 +133,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (bridgePortChanged && port !== previousPort) {
         try {
           await restartBridge();
-          void vscode.window.showInformationMessage(`Agently bridge restarted on http://127.0.0.1:${port}`);
+          notify(`Agently bridge restarted on http://127.0.0.1:${port}`);
         } catch (error) {
           const message = toUserErrorMessage(error);
           void vscode.window.showErrorMessage(`Agently could not restart bridge on port ${port}: ${message}`);
@@ -133,7 +142,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     })
   );
 
-  void vscode.window.showInformationMessage(`Agently bridge listening on http://127.0.0.1:${port}`);
+  notify(`Agently bridge listening on http://127.0.0.1:${port}`);
 }
 
 export function deactivate(): void {
@@ -151,8 +160,8 @@ function buildCopilotChatPrompt(item: PromptQueueItem, editor: vscode.TextEditor
     `Page URL: ${item.context?.pageUrl ?? "-"}`,
     `DOM selector: ${item.context?.selector ?? "-"}`,
     `Current file: ${currentFile}`,
-    // `Language: ${languageId}`,
-    "Selected code:",
+    `Language: ${languageId}`,
+    // "Selected code:",
     selectedCode
   ].join("\n");
 }
