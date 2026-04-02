@@ -76,9 +76,9 @@ export default function App() {
 
       const cardId = cardElement.getAttribute("data-card");
       const card = cards.find((c) => c.id === cardId);
-      if (card) {
-        void sendPrompt(card);
-      }
+      // if (card) {
+      //   void sendPrompt(card);
+      // }
     };
 
     window.addEventListener("mousedown", handleMouseDown, true);
