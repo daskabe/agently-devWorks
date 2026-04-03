@@ -19,6 +19,14 @@ export class PromptQueue {
     return this.#items.shift();
   }
 
+  dequeueById(id: string): PromptQueueItem | undefined {
+    const index = this.#items.findIndex((item) => item.id === id);
+    if (index === -1) {
+      return undefined;
+    }
+    return this.#items.splice(index, 1)[0];
+  }
+
   prepend(item: PromptQueueItem): void {
     this.#items.unshift(item);
   }

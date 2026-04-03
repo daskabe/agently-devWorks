@@ -4,6 +4,8 @@ import { PromptQueueItem } from "./types";
 export class AgentlyPanel {
   #panel: vscode.WebviewPanel | undefined;
   #extensionUri: vscode.Uri;
+  #onPlayPrompt = new vscode.EventEmitter<string>();
+  readonly onPlayPrompt = this.#onPlayPrompt.event;
 
   constructor(extensionUri: vscode.Uri) {
     this.#extensionUri = extensionUri;
@@ -28,6 +30,12 @@ export class AgentlyPanel {
 
       this.#panel.onDidDispose(() => {
         this.#panel = undefined;
+      });
+
+      this.#panel.webview.onDidReceiveMessage((message) => {
+        if (message.type === 'playPrompt' && typeof message.id === 'string') {
+          this.#onPlayPrompt.fire(message.id);
+        }
       });
 
       this.#panel.webview.html = getHtml();
@@ -76,6 +84,34 @@ function getHtml(): string {
         padding: 8px;
         margin-bottom: 8px;
         background: color-mix(in srgb, var(--vscode-editor-background) 88%, var(--vscode-foreground) 12%);
+        display: flex;
+        align-items: center;
+      }
+      .card-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .play-btn {
+        flex-shrink: 0;
+        margin-left: 8px;
+        width: 32px;
+        height: 32px;
+        border: 2px solid black;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      .play-btn:hover {
+        opacity: 0.8;
+      }
+      .play-btn svg {
+        width: 14px;
+        height: 14px;
+        margin-left: 2px;
       }
       code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     </style>
@@ -101,12 +137,28 @@ function getHtml(): string {
           const items = message.payload || [];
           list.innerHTML = items.map((item) => \`
             <div class="card">
-              <div><strong>\${escape(item.text)}</strong></div>
-              <div class="meta">source: \${escape(item.source || 'unknown')}</div>
-              <div class="meta">selector: <code>\${escape(item.context?.selector || '-')}</code></div>
-              <div class="meta">url: \${escape(item.context?.pageUrl || '-')}</div>
+              <div class="card-content">
+                <div><strong>\${escape(item.text)}</strong></div>
+                <div class="meta">source: \${escape(item.source || 'unknown')}</div>
+                <div class="meta">selector: <code>\${escape(item.context?.selector || '-')}</code></div>
+                <div class="meta">url: \${escape(item.context?.pageUrl || '-')}</div>
+              </div>
+              <button class="play-btn" data-id="\${escape(item.id)}" title="Run this prompt">
+                <svg viewBox="0 0 24 24" fill="black" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="6,3 21,12 6,21" />
+                </svg>
+              </button>
             </div>
           \`).join('');
+        }
+      });
+
+      const vscode = acquireVsCodeApi();
+
+      document.getElementById('list').addEventListener('click', (e) => {
+        const btn = e.target.closest('.play-btn');
+        if (btn) {
+          vscode.postMessage({ type: 'playPrompt', id: btn.dataset.id });
         }
       });
 

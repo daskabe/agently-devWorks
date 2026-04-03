@@ -92,6 +92,39 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }
   });
 
+  panel.onPlayPrompt(async (id) => {
+    if (isProcessing) {
+      return;
+    }
+
+    const item = queue.dequeueById(id);
+    if (!item) {
+      return;
+    }
+
+    isProcessing = true;
+    try {
+      const editor = await resolveTargetEditor(item);
+      const chatPrompt = buildCopilotChatPrompt(item, editor);
+
+      panel.postInfo("Sending queued prompt to Copilot Chat...");
+      await openCopilotChatWithPrompt(chatPrompt);
+
+      panel.postInfo("Prompt sent to Copilot Chat.");
+      panel.postQueue(queue.all());
+      notify("Prompt added to Copilot Chat.");
+    } catch (error) {
+      queue.prepend(item);
+      panel.postQueue(queue.all());
+
+      const message = toUserErrorMessage(error);
+      panel.postInfo(`Copilot processing failed: ${message}`);
+      void vscode.window.showErrorMessage(`Agently could not process prompt with Copilot: ${message}`);
+    } finally {
+      isProcessing = false;
+    }
+  });
+
   context.subscriptions.push({
     dispose: () => {
       void bridge.stop();
