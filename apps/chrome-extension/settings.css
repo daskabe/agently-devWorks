@@ -38,6 +38,9 @@ body {
     linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 78%, #dce7d7));
   min-height: 100vh;
 }
+p{
+  font-size: large;
+}
 
 .settings-page {
   width: min(920px, calc(100vw - 32px));
@@ -115,7 +118,6 @@ body {
   border-radius: 14px;
   background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
   color: var(--text);
-  font: inherit;
 }
 
 .field-input:focus,
