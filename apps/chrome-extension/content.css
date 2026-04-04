@@ -754,6 +754,11 @@ color-mix(in srgb, var(--ag-bg) 55%, transparent) 85%,
   box-sizing: border-box;
 }
 
+.agently-drawer .agently-panel-inner {
+  flex: 1;
+  min-height: 0;
+}
+
 .agently-drawer .agently-queue-container {
   flex: 1 1 0;
   max-height: none !important;

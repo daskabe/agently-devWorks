@@ -13,9 +13,7 @@
     {
       "matches": [
         "http://localhost/*",
-        "http://localhost:*/*",
-        "http://127.0.0.1/*",
-        "http://127.0.0.1:*/*"
+        "http://127.0.0.1/*"
       ],
       "css": ["content.css"],
       "js": ["content.js"],
@@ -27,9 +25,7 @@
       "resources": ["assets/fonts/*"],
       "matches": [
         "http://localhost/*",
-        "http://localhost:*/*",
-        "http://127.0.0.1/*",
-        "http://127.0.0.1:*/*"
+        "http://127.0.0.1/*"
       ]
     }
   ],
