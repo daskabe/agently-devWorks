@@ -1,9 +1,9 @@
 {
   "name": "agently-vscode-extension",
   "displayName": "Agently",
-  "description": "Developer productivity bridge for prompt-driven code edits.",
+  "description": "Prompt VS Code from your browser with DOM context via the Agently Chrome local bridge.",
   "version": "0.1.0",
-  "publisher": "agently",
+  "publisher": "ByteDyno",
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -16,6 +16,7 @@
     "onCommand:agently.openPromptPanel",
     "onCommand:agently.applyQueuedPrompt"
   ],
+  "icon": "assets/icon.png",
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -57,14 +58,14 @@
   },
   "scripts": {
     "build": "node esbuild.js",
-    "build:prod": "node esbuild.js --production",
+    "build:prod": "npm run clean && node esbuild.js --production",
     "dev": "node esbuild.js --watch",
     "watch": "node esbuild.js --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist",
     "prebuild:prod": "pnpm run clean && pnpm run typecheck",
-    "package": "vsce package",
+    "package": "npm run prepackage && vsce package --allow-missing-repository",
     "publish": "vsce publish",
     "publish:minor": "vsce publish minor",
     "publish:major": "vsce publish major",
@@ -75,5 +76,10 @@
     "@types/vscode": "^1.95.0",
     "@vscode/vsce": "^3.0.0",
     "esbuild": "^0.25.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/daskabe/agently-web"
   }
 }

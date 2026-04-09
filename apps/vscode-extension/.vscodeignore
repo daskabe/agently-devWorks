@@ -1,0 +1,8 @@
+**/.vscode/**
+**/.turbo/**
+**/node_modules/**
+**/src/**
+**/*.map
+esbuild.js
+tsconfig.json
+CODEX_PROMPT_FINDINGS.md
