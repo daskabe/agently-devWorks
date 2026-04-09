@@ -56,12 +56,24 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node esbuild.js",
+    "build:prod": "node esbuild.js --production",
+    "dev": "node esbuild.js --watch",
+    "watch": "node esbuild.js --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist",
+    "prebuild:prod": "pnpm run clean && pnpm run typecheck",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "publish:minor": "vsce publish minor",
+    "publish:major": "vsce publish major",
+    "prepackage": "pnpm run build:prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
-    "@types/vscode": "^1.95.0"
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0"
   }
 }
