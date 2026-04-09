@@ -2,7 +2,7 @@
   "name": "agently-vscode-extension",
   "displayName": "Agently",
   "description": "Prompt VS Code from your browser with DOM context via the Agently Chrome local bridge.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "ByteDyno",
   "engines": {
     "vscode": "^1.95.0"
@@ -80,6 +80,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/daskabe/agently-web"
+    "url": "https://github.com/daskabe/agently-web",
   }
 }
