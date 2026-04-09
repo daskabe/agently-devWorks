@@ -2,13 +2,27 @@
   "name": "agently-vscode-extension",
   "displayName": "Agently",
   "description": "Prompt VS Code from your browser with DOM context via the Agently Chrome local bridge.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "ByteDyno",
   "engines": {
     "vscode": "^1.95.0"
   },
+  "website": "https://agently.davvit.com/",
   "categories": [
-    "Other"
+    "Chat",
+    "AI"
+  ],
+  "keywords": [
+    "copilot",
+    "chrome",
+    "browser",
+    "dom",
+    "prompt",
+    "developer-tools",
+    "workflow",
+    "AI",
+    "llm",
+    "local-bridge"
   ],
   "activationEvents": [
     "onStartupFinished",
@@ -80,6 +94,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/daskabe/agently-web",
+    "url": "https://github.com/daskabe/agently-web"
   }
 }
