@@ -4,10 +4,10 @@ Agently connects your browser to VS Code so you can send a prompt from a live pa
 
 It is designed to work with the Agently Chrome extension. When you trigger a prompt in Chrome, this extension receives it through a local HTTP bridge, shows it in a prompt queue, and sends it to Copilot Chat in VS Code.
 
-![chrome-extension](assets/chrome-extension.png)
+![chrome-extension](https://agently.davvit.com/assets/agently-640x400-CGneLUv8.jpg)
 
 <a href="https://chromewebstore.google.com/detail/agently-local-prompt-to-l/cdcngpbohinmfhnpnilaijkkdloiokcl">
-  <img src="assets/chrome-store-icon.png" align="left" width="20">&nbsp;&nbsp;Available on Chrome Web Store
+  <img src="https://agently.davvit.com/assets/330px-Google_Chrome_Web_Store_icon-DEwvb5Ue.png" align="left" width="20">&nbsp;&nbsp;Available on Chrome Web Store
 
 </a>
 
